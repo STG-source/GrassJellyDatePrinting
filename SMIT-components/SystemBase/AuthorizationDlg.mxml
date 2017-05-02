@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:smyuserservice="services.smyuserservice.*"
+		 title="อนุมัติรายการ"
+		 width="400" height="220"
+		 fontFamily="Arial" fontSize="22"
+		 initialize="init(event)"
+		 close="onClose_Handler(event)">
+
+	<s:layout>
+		<s:VerticalLayout verticalAlign="middle" horizontalAlign="center"/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.FocusManager;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import utilities.MyUtil;
+			import TransactionEngine.BaseTransaction;
+
+			private var _isValid:Boolean = false;
+			private var _authorizedUserName:String = null;
+			private var _authorizedUserID:String = null;
+
+			/** this function have 1 argument **/
+			private var _unSuccessfulFunc:Function = null;
+			private var _successfulFunc:Function = null;
+			/**
+			 * fail is a dynamic function for your own function <br />
+			 * use for fault result  <br />
+			 * _unSuccessfulFunc(action,reason,er)
+			 * **/
+			public function set fail(func:Function):void
+			{
+				if(func == null)
+					throw new Error("Null unsuccessful Function Exception");
+				_unSuccessfulFunc = func;
+			}
+			public function set done(func:Function):void{
+				if(func == null)
+					throw new Error("Null successful Function Exception");
+				_successfulFunc = func;
+			}
+			public function get getAuthorizedUserName():String{
+				return _authorizedUserName;
+			}
+			public function get getAuthorizedUserID():String{
+				return _authorizedUserID;
+			}
+			protected function okButton_clickHandler(event:MouseEvent):void
+			{
+				checkAuthorization();
+			}
+
+			protected function checkAuthorization():void
+			{
+				if(!isRequireFieldValid(txtUsername))
+					unSuccessfulAuth("Required","Required username text");
+				else if(!isRequireFieldValid(txtPassword))
+					unSuccessfulAuth("Required","Required password text");
+
+				var sql:String = "SELECT * FROM _myuser WHERE" +
+					" DEL_USR IS NULL "+
+					" AND myusername = '"+txtUsername.text+"'"+
+					" AND mypassword = '"+txtPassword.text+"'"
+					" LIMIT 1";
+				getAuthorizationResult.token = myUserWebservice.getSearch_user(sql);
+			}
+
+			protected function getAuthorizationResult_resultHandler(event:ResultEvent):void
+			{
+				var _isValid:Boolean = true;
+				var userClass:Number = 0;
+
+				if(event.result.length < 1 
+					|| event.result[0].userClass != 2)
+					_isValid = false;
+
+				if(event.result.length >= 1 && _isValid)
+				{
+					_authorizedUserName = event.result[0].fullname;
+					_authorizedUserID = event.result[0].userID;
+					successfulAuth();
+				}
+				else if(event.result.length >= 1 && !_isValid)
+				{
+					unSuccessfulAuth("ไม่สามารถใช้งานส่วนนี้ได้","ผู้ใช้งานท่านนี้ไม่สามารถใช้งานส่วนนี้ได้",null);
+				}
+				else
+				{
+					unSuccessfulAuth("ไม่สามารถใช้งานส่วนนี้ได้","ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง\nลองดูว่ากด Caps Lock ค้างอยู่หรือไม่",null);
+				}
+			}
+			private function successfulAuth():void
+			{
+				if(_successfulFunc != null)
+				{
+					_successfulFunc(this);
+				}
+				dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+			}
+			public function isRequireFieldValid(txtInput:TextInput):Boolean{
+				if(MyUtil.isNullOrEmpty(txtInput.text)){
+					return false;
+				}
+				else
+					return true;
+			}
+			private function cancelButton_clickHandler(event:MouseEvent):void
+			{
+				unSuccessfulAuth("cancelled","user exit from dialog",null);
+				dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+			}
+			private function myUserWebservice_faultHandler(event:FaultEvent):void
+			{
+				unSuccessfulAuth("webservice error",event.message.toString(),event);
+			}
+			private function getAuthorizationResult_faultHandler(event:FaultEvent):void
+			{
+				unSuccessfulAuth("callResponder error",event.message.toString(),event);
+			}
+			private function unSuccessfulAuth(action:String , reason:String , er:Object = null):void{
+				if(_unSuccessfulFunc != null){
+					_unSuccessfulFunc(action,reason,er);
+				}
+			}
+			protected function onClose_Handler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+
+			protected function inputKeyDown(event:KeyboardEvent,key:String):void
+			{
+				if(key == "username" && event.charCode == Keyboard.ENTER)
+				{
+					txtPassword.setFocus();
+					txtPassword.selectAll();
+				}else if(key == "password"
+					&& event.charCode == Keyboard.ENTER
+					&& !isRequireFieldValid(txtUsername)
+				){
+					txtUsername.setFocus();
+				}
+				else if( (key == "password" || focusManager.getFocus() == okButton)
+					&& event.charCode == Keyboard.ENTER
+					&& isRequireFieldValid(txtUsername)
+				){
+					okButton_clickHandler(new MouseEvent(MouseEvent.CLICK));	
+				}
+				else if(event.charCode == Keyboard.ENTER
+					&& focusManager.getFocus() == cancelButton){
+					cancelButton_clickHandler(new MouseEvent(MouseEvent.CLICK));
+				}
+			}
+			protected function init(event:FlexEvent):void
+			{
+				BaseTransaction.set_to_global_endpoint(myUserWebservice,this);
+			}
+		]]>
+	</fx:Script>
+
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<smyuserservice:SmyuserService id="myUserWebservice" fault="myUserWebservice_faultHandler(event)" />
+		<s:CallResponder id="getAuthorizationResult" result="getAuthorizationResult_resultHandler(event)"
+						 fault="getAuthorizationResult_faultHandler(event)" />
+	</fx:Declarations>
+
+		<mx:Form y="72" fontWeight="bold" color="#939292" fontSize="18" x="490">
+			<mx:FormItem label="ชื่อเข้าใช้งาน">
+				<s:TextInput id="txtUsername" selectable="true" keyDown="inputKeyDown(event,'username')"
+							 maxChars="10" restrict="a-z A-Z 0-9"/>
+			</mx:FormItem>
+			<mx:FormItem label="รหัสผ่าน">
+				<s:TextInput id="txtPassword" displayAsPassword="true" keyDown="inputKeyDown(event,'password')"
+							 maxChars="8"/>
+			</mx:FormItem>
+		</mx:Form>
+		<s:HGroup width="96%" height="77" horizontalAlign="center" verticalAlign="middle">
+				<s:Spacer width="98%"/>
+				<s:Button id="okButton" icon="@Embed(source='images/okBTN.png')" iconPlacement="top"
+						  label="ตกลง" click="okButton_clickHandler(event)" keyDown="inputKeyDown(event,'OK')"
+						  width="97" height="71"
+						  fontSize="18"/>
+				<s:Button id="cancelButton" icon="@Embed(source='images/cancelBTN42.png')" iconPlacement="top"
+						  label="ยกเลิก" click="cancelButton_clickHandler(event)" keyDown="inputKeyDown(event,'cancelled')"
+						  width="97" height="71"
+						  fontSize="18"/>
+			<s:Spacer width="2%"/>
+		</s:HGroup>
+
+</s:TitleWindow>

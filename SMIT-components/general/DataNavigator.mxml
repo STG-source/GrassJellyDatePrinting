@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:general="general.*"
+		 width="570" height="60" xmlns:Navigator="Navigator.*">
+	<fx:Style source="kpStyle.css"/>
+		
+	<fx:Metadata>
+		[Event(name="listChangedNav"	, type="events.DataNavigatorEvent")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			//import ItemUnit.itemForm;
+			import events.DataNavigatorEvent;
+			import mx.events.FlexEvent;
+
+			public var curPage:int = 1;
+			public var numPages:int = 0;
+
+			protected function skipBack_clickHandler(event:MouseEvent):void
+			{
+				trace('Components skipBack_clickHandler '+ curPage +' ' +numPages);
+				list.selectedItem = 1;
+				dispatchEvent(new DataNavigatorEvent(DataNavigatorEvent.LISTCHANGEDNAV,curPage,numPages));
+			}
+
+			protected function back_clickHandler(event:MouseEvent):void
+			{
+				trace('Components back_clickHandler '+ curPage +' ' +numPages);
+				
+				if (curPage > 1) {
+					curPage--;
+				}
+				list.selectedItem = curPage;
+				//dispatchEvent(new DataNavigatorEvent(DataNavigatorEvent.LISTCHANGEDNAV,curPage,numPages));
+			}
+
+			protected function list_valueCommitHandler(event:FlexEvent):void
+			{
+				trace('Components list_valueCommitHandler '+ curPage +' ' +numPages);
+
+				curPage = list.selectedItem as int;
+				if (curPage == 0)
+					curPage = 1;
+
+				this.dispatchEvent(new DataNavigatorEvent(DataNavigatorEvent.LISTCHANGEDNAV,curPage,numPages));
+			}
+
+			protected function forward_clickHandler(event:MouseEvent):void
+			{
+				trace('Components forward_clickHandler ' + curPage +' ' +numPages);
+
+				if (curPage < numPages) 
+				{
+					curPage++;
+				}
+				list.selectedItem = curPage;
+				dispatchEvent(new DataNavigatorEvent(DataNavigatorEvent.LISTCHANGEDNAV,curPage,numPages));
+			}
+
+			protected function skipForward_clickHandler(event:MouseEvent):void
+			{
+				list.selectedItem = numPages;
+				dispatchEvent(new DataNavigatorEvent(DataNavigatorEvent.LISTCHANGEDNAV,curPage,numPages));
+			}
+			
+			public function refresh_clickHandler(event:MouseEvent):void
+			{
+				trace('Components skipBack_clickHandler '+ curPage +' ' +numPages);
+				list.selectedItem = 1;
+				dispatchEvent(new DataNavigatorEvent(DataNavigatorEvent.LISTCHANGEDNAV,curPage,numPages));
+			}
+			
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<s:BorderContainer x="1" y="0" width="569" height="60" backgroundColor="#FCABAB">
+		<s:HGroup x="0" y="-1" width="567" height="59" horizontalAlign="center"
+				  verticalAlign="middle">
+			<s:Button width="48" height="48"
+					  icon="@Embed('images/Play-3.png')" id="skipBack" click="skipBack_clickHandler(event)"/>
+			<s:Button width="48" height="48"  cornerRadius="2" fontSize="20"
+					  fontWeight="bold"
+					  icon="@Embed('images/Play4.png')"
+					  id="back" click="back_clickHandler(event)"/>
+			<s:DropDownList id="list" y="6" height="48" dropShadowVisible="false"
+							fontFamily="Times New Roman" fontSize="20" prompt="1" textAlign="center"
+							valueCommit="list_valueCommitHandler(event)">
+			</s:DropDownList>
+			<s:Button width="48" height="48"  fontSize="20" fontWeight="bold"
+					  icon="@Embed('images/Play1.png')" id="forward" click="forward_clickHandler(event)"/>
+			<s:Button id="SkipForward" width="48" height="49"
+					  icon="@Embed('images/Play-2.png')"
+					  click="skipForward_clickHandler(event)"/>
+			<s:Button id="refresh" x="347" width="48" height="48" click="refresh_clickHandler(event)"
+					  icon="@Embed('icons/Arrow-Refresh-Small-32.png')"/>
+			<s:Label id="itemallTxt" width="164" height="48" backgroundColor="#EE8015"
+					 fontFamily="AngsanaUPC" fontSize="32" fontWeight="normal" paddingBottom="15"
+					 textAlign="center" verticalAlign="middle"/>
+		</s:HGroup>
+	</s:BorderContainer>
+</s:Group>

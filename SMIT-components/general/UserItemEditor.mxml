@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						  xmlns:s="library://ns.adobe.com/flex/spark" 
+						  xmlns:mx="library://ns.adobe.com/flex/mx" 
+						  implements="mx.managers.IFocusManagerComponent"
+						  creationComplete="creationCompleteHandler(event)"
+						  focusEnabled="true"  
+						  focusIn="setInsert(event)" 
+						  focusColor="#FBF803">
+	
+	<!---
+	 The idea to make this class is come from http://dougr.net/?p=503
+	/-->
+	
+	<fx:Metadata>
+		[Event(name="requestToUpdateReceipt", type="events.RequestToUpdateReceipt")]
+	</fx:Metadata>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import SystemBase.GlobalVariable;
+			import SMITPOSAssist.POSAssist;
+			import components.saleForm;
+			import events.RequestToUpdateReceipt;
+			import events.SaleFormUIEvents;
+			import mx.controls.DataGrid;
+			import mx.controls.dataGridClasses.DataGridItemRenderer;
+			import mx.events.FlexEvent;
+			import mx.formatters.NumberBase;
+			import mx.managers.IFocusManagerComponent;
+			import spark.events.TextOperationEvent;
+
+			[Bindable] private var touchPanelText:String = "";
+			private var currentDataGrid:DataGrid;
+			private var iColDataGrid:int;
+			private var iRowDataGrid:int;
+			private var _strDataField:String;
+			private var _posAObj:POSAssist;
+			private var loopCnt:int = 0;
+			private var tmpEventText:String;
+			private var _input_txtKeyIn:String = new String;
+
+			/** 
+			 * lastInputIsKB set to be true, all input from
+			 * keyboard will be ignored after touch panel input
+			 * starting. */
+			private var lastInputIsKB:Boolean;
+			
+			private static var onFlyEventObj:RequestToUpdateReceipt = null;
+			private static var onTheFlyArray:Array = new Array();
+			
+			private function setInsert(event:FocusEvent):void
+			{	
+				//trace('UserItemEditor:: FocusIn');
+				userEditor.setFocus();
+				userEditor.selectAll();
+				
+				killShowMessage();
+			}
+			
+			public function get kbIsLastInput():Boolean
+			{
+				return lastInputIsKB;
+			}
+
+			public function set kbIsLastInput(val:Boolean):void
+			{
+				lastInputIsKB = val;
+			}
+
+			public function addUserText(str:String):void
+			{
+				if (lastInputIsKB)
+					touchPanelText = str;
+				else
+					touchPanelText += str;
+
+				lastInputIsKB = false;
+			}
+
+			public function clearText():void
+			{
+				userEditor.text = touchPanelText = "";
+			}
+			
+			public function get inputText():String
+			{
+				trace('Current InputText: touchPanelText: ' + touchPanelText + 
+									        ' userEditor: ' + userEditor.text);
+				if (lastInputIsKB)
+					return userEditor.text;
+				else 
+					return touchPanelText;
+			}
+			
+			public function set inputText(str:String):void
+			{
+				touchPanelText = str;
+			}
+			
+			public function get strDataField():String
+			{
+				return _strDataField;
+			}
+
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				trace('UserItemEditor:: CreationCompleteHandler');
+				
+				if (this.parentApplication is POS_2011) {
+					_posAObj = this.parentApplication._posAssistObj;
+				}
+				
+				if (this.parent.parent is DataGrid) {
+					currentDataGrid = DataGrid(this.parent.parent);
+					iColDataGrid    = currentDataGrid.editedItemPosition.columnIndex;
+					iRowDataGrid    = currentDataGrid.editedItemPosition.rowIndex;
+					_strDataField   = currentDataGrid.columns[iColDataGrid].dataField;
+					
+					if (currentDataGrid.editedItemPosition != 'null') {
+						userEditor.width = currentDataGrid.columns[iColDataGrid].
+											width; 
+						touchPanelText   = DataGridItemRenderer(currentDataGrid.editedItemRenderer).
+							                text;
+					} 
+				}
+				
+				if (this.parentDocument is saleForm) {
+					addEventListener("requestToUpdateReceipt", this.parentDocument.updateReceipt);
+					this.parentDocument.receiptItemEditor = this;
+				}
+				
+				/** Set the default input is from keyboard */
+				lastInputIsKB = true;
+				
+				var flyNow:RequestToUpdateReceipt = onTheFlyArray.shift();
+				if (flyNow != null) {
+					trace('userEditor - User input ON THE FLY!! ');
+					dispatchEvent(flyNow);
+				}
+			}
+
+			protected function userEditor_changeHandler(event:TextOperationEvent):void
+			{
+				//trace('userEditor - Changed');
+			}
+
+			protected function userEditor_enterHandler(event:FlexEvent):void
+			{
+				/** trace('event txt: ' + event.target.text +
+					  '  touchPanelText: ' + touchPanelText +
+					  '  UserEditor.txt: ' + userEditor.text);
+				//uncomment for debugging. */
+
+				if (GlobalVariable.BCSCM_POSASSIST == GlobalVariable.wcBC_ScanMode) {
+					if (_posAObj.isBSCActive) {
+						/** Select BCSM POSAssist **/
+						tmpEventText = event.target.text;
+						_posAObj.cmdRWR(POSAssist.CMD_GET_BSCLINE, checkBSCLine);
+					}
+					else
+						processInputData(event.target.text); /** Direct Process **/
+				}
+				else {
+					/** BCSM Simply will be selected by default **/
+					userEditor.text = _input_txtKeyIn;
+					processInputData(_input_txtKeyIn);
+				}
+
+				_input_txtKeyIn = "";
+			}
+
+			protected function processInputData(eventText:String):void
+			{
+				var eventObj:RequestToUpdateReceipt;
+				
+				if (iColDataGrid == saleForm.COL_BILLITEMQTY) {
+					var numbase:NumberBase = new NumberBase();
+
+						if (Number(numbase.parseNumberString(eventText)) > saleForm.MAX_QTY) {
+							lastInputIsKB = true;
+							userEditor.text = eventText;
+							var tooltipEv:SaleFormUIEvents = new SaleFormUIEvents(SaleFormUIEvents.SHOWTOOLTIPMSG, 
+																	false, false, 
+																	this.x, this.y, 
+																	true, saleForm.MSG_QTY_OVEREXCEED);
+							if (this.parentDocument is saleForm)
+								saleForm(this.parentDocument).dispatchEvent(tooltipEv);
+
+							return;
+						}
+				}
+				
+				eventObj = new RequestToUpdateReceipt("requestToUpdateReceipt",
+					currentDataGrid.columns[iColDataGrid].dataField,
+					eventText);
+				
+				trace('userEditor - User press Enter Key!! ' +
+					currentDataGrid.columns[iColDataGrid].dataField);
+				dispatchEvent(eventObj);
+				trace('userEditor - User press Enter Key!! @t END');
+				
+				lastInputIsKB = true;
+			}
+
+			protected function userEditor_textInputHandler(event:TextEvent):void
+			{
+				/** This event dispatched when text inputed only */
+				//trace('userEditor - textInput - ' + event.text);
+				_input_txtKeyIn += event.text;
+
+				/** 
+				 * Unmemorize the touchPanelText stored data
+				 * only if keyboard input is digit. */
+				if (this.parentDocument.isDigitInput(String(event.text))) 
+					lastInputIsKB = true;
+			}
+
+			protected function userEditor_keyDownHandler(event:KeyboardEvent):void
+			{
+				/** This event dispatched when all keyboard input */
+				//trace('userEditor - keyDown - ' + event.keyCode);
+				
+				/** 
+				 * Unmemorize the touchPanelText stored data
+				 * only if keyboard input is BACKSPACE or DELETE. */
+				if ((event.keyCode == Keyboard.BACKSPACE) ||
+					(event.keyCode == Keyboard.DELETE))
+					lastInputIsKB = true;
+				
+				killShowMessage();
+				
+				/** After ending this event, the textInput event will be dispatched */
+			}
+			
+			public function killShowMessage():void
+			{
+				//trace('userItemEditor KillShowMessage');
+				var eventObj:SaleFormUIEvents = new SaleFormUIEvents(SaleFormUIEvents.KILLTOOLTIPMSG);
+				if (this.parentDocument is saleForm)
+					saleForm(this.parentDocument).dispatchEvent(eventObj);
+			}
+			
+			public function checkBSCLine():void
+			{
+				trace('---> Get BSCLine: ' + _posAObj.returnValue + 
+					  ' With return status[' + _posAObj.lastStatus + ']');
+
+				if ((POSAssist.FIFO_BUSY == _posAObj.returnValue) &&
+					(0 != _posAObj.lastStatus) &&
+					(0 == loopCnt)) {
+					trace('FIFO BUSY - try to read again.');
+					//_posAObj.cmdRWR(POSAssist.CMD_GET_BSCLINE, checkBSCLine);
+					loopCnt++;
+				}
+				else if ((POSAssist.FIFO_EMPTY == _posAObj.returnValue) &&
+					     (0 != _posAObj.lastStatus)) {
+					trace('FIFO EMPTY - pass to normal key by: ' + tmpEventText);
+					processInputData(tmpEventText);
+				}
+				else {
+				  processInputData(_posAObj.returnValue);
+				}
+
+				loopCnt = 0;
+			}
+
+		]]>
+	</fx:Script>
+
+	<s:TextInput id="userEditor" text="{touchPanelText}"
+				 contentBackgroundColor="#FFEA00"
+				 contentBackgroundAlpha="1.0"
+				 alpha="1" enabled="true" 
+				 borderColor="#FFAE00"
+				 restrict="0-9"
+				 change="userEditor_changeHandler(event)" 
+				 enter="userEditor_enterHandler(event)"
+				 textInput="userEditor_textInputHandler(event)"
+				 keyDown="userEditor_keyDownHandler(event)"/>
+
+</s:MXDataGridItemRenderer>

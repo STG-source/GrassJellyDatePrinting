@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:smyuserservice="services.smyuserservice.*"
+		 width="894" height="350"
+		 horizontalCenter="0"
+		 verticalCenter="0"
+		 initialize="group1_initializeHandler(event)"
+		 creationComplete="creationCompleteHandler(event)"
+		 keyUp="group1_keyUpHandler(event)"
+		 >
+	<fx:Style source="kpStyle.css"/>
+
+	<fx:Metadata>
+		[Event(name="loginEvent", type="events.LoginEvent")]
+	</fx:Metadata>
+
+	<fx:Script>
+		<![CDATA[
+			import SystemBase.GlobalVariable;
+			
+			import TransactionEngine.BaseTransaction;
+			
+			import com.adobe.fiber.runtime.lib.StringFunc;
+			
+			import components.TitleKeypad;
+			
+			import events.LoginEvent;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.EffectEvent;
+			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.ObjectUtil;
+			
+			import utilities.MyUtil;
+
+			private var event1:Event;
+			private var btnName1:String;
+			public var checkKeyPad:Boolean;
+			private var InputText:TextInput;
+
+			public var tk:TitleKeypad = new TitleKeypad();
+			public var count:int = 0;
+			public var defaultBtn:Boolean = false;
+
+			[Bindable] private var ourCompany:String;
+			[Bindable] public var ourServiceDBVersion:String = "";
+
+			protected function group1_initializeHandler(event:FlexEvent):void
+			{
+				ourCompany = "Version " + MyUtil.getAppLabel() +
+					GlobalVariable.infoTO +
+					"  By " + MyUtil.OUR_COMPANY;
+				var test:String = GlobalVariable.wcServiceVer;
+				addEventListener(KeyboardEvent.KEY_DOWN, switchInput);
+				tk.addEventListener(MouseEvent.CLICK,    MouseClickDlg);
+				txtUsername.setFocus();
+				txtUsername.selectAll();
+			}
+
+			protected function mainButtonClickHandler(ev:Event, btnName:String):void{
+				if(btnName == "login" && !MyUtil.isNullOrEmpty(txtUsername.text) && !MyUtil.isNullOrEmpty(txtPassword.text)){
+					getUser.token = myuserservice1.getSearch_user("SELECT * FROM _myuser WHERE DEL_USR IS NULL AND myusername = '"
+						+ StringFunc.trim(txtUsername.text) + "' AND mypassword = '" + StringFunc.trim(txtPassword.text) + "'");
+					event1 = ev;
+					btnName1 = btnName;
+				}
+				else if (btnName == "exit") {
+					var evObj:LoginEvent;
+
+					/** Have to pass (btnName == "exit") through the loginEvent() in the main form **/
+					evObj = new LoginEvent("loginEvent", ev.target as Button, btnName, "default");
+					dispatchEvent(evObj);
+				}
+
+				/** Force to close the key pad **/
+				tk.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+				keyPadBtn.selected = false;
+				defaultBtn = false;
+			}
+
+			protected function identifyUser():void{
+				var arr1:ArrayCollection = getUser.lastResult;
+				var evObj:LoginEvent;
+				
+				if(arr1.length > 0){
+					GlobalVariable.currentUser = ObjectUtil.copy(arr1[0]);
+					evObj = new LoginEvent("loginEvent", event1.target as Button, btnName1, "default");
+					dispatchEvent(evObj);
+				}else{
+					Alert.show("Wrong username or password!");
+				}
+			}
+
+			protected function getUser_resultHandler(event:ResultEvent):void
+			{
+				identifyUser();
+			}
+
+			protected function group1_keyUpHandler(event:KeyboardEvent):void
+			{
+				if(event.charCode == !MyUtil.isNullOrEmpty(txtUsername.text) && !MyUtil.isNullOrEmpty(txtPassword.text)){
+					var event1:Event = new Event("eventFromKeyEnter");
+					mainButtonClickHandler(event1,'login');
+				}
+			}
+
+			protected function keyPad_clickHandler(event:MouseEvent):void
+			{
+				if(event.target.selected == true)
+				{
+					trace("KeyPad = " + event.target.selected);
+					PopUpManager.addPopUp(tk,this,false);
+					PopUpManager.centerPopUp(tk);
+					if(defaultBtn == false)
+					{
+						tk.keypad.targetTextInput = TextInput(txtUsername);
+						count = 0;
+						defaultBtn = true;
+					} else {
+						tk.keypad.targetTextInput = TextInput(InputText);
+					}
+				} else {
+					tk.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+				}
+			}
+
+			protected function clickHandler(event:MouseEvent):void
+			{
+				var Txt:TextInput = TextInput(event.currentTarget);
+
+				if(Txt == txtUsername)
+				{
+					count = 0;
+					trace( "txtUsername || count = " + count );
+					defaultBtn = true;
+					txtUsername.setFocus();
+					txtUsername.selectAll();
+					if(tk.keypad != null)
+					{
+						tk.keypad.targetTextInput = TextInput(txtUsername);
+					} else {
+						trace("KeyPad == Null");
+					}
+				} else {
+					count = 1;
+					trace( "txtPassword || count = " + count );
+					defaultBtn = true;
+					txtPassword.setFocus();
+					txtPassword.selectAll();
+					if(tk.keypad != null)
+					{
+						tk.keypad.targetTextInput = TextInput(txtPassword);
+					} else {
+						trace("KeyPad == Null");
+					}
+				}
+				InputText = Txt;
+			}
+
+			public function switchInput(ev:KeyboardEvent):void
+			{
+				trace("keycode = " + ev.keyCode);
+
+				if(ev.keyCode == Keyboard.ENTER)
+				{
+					if(count == 0)
+					{
+						count = 1;
+						txtPassword.setFocus();
+						txtPassword.selectAll();
+						if(tk.keypad != null)
+						{
+							tk.keypad.targetTextInput = TextInput(txtPassword);
+						} else {
+							trace("KeyPad == Null");
+						}
+					} else {
+						tk.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+						mainButtonClickHandler(ev,"login");
+						count = 0;
+						keyPadBtn.selected = false;
+					}
+				}
+				else if(ev.keyCode == Keyboard.TAB)
+				{
+					if(count == 0)
+					{
+						count = 1;
+						if(tk.keypad != null)
+						{
+							tk.keypad.targetTextInput = TextInput(txtPassword);
+						} else {
+							trace("Tab Tab");
+							keyPadBtn.selected = false;
+						}
+					}
+				} else {
+					trace("No enter");
+				}
+			}
+
+			protected function MouseClickDlg(ev:MouseEvent):void
+			{
+				if('keypadOK' == ev.target.id)
+				{
+					dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_DOWN, true, false,0,Keyboard.ENTER));
+				}
+				else if('closeButton'  ==  ev.target.id)
+				{
+					keyPadBtn.selected = false;
+				}
+				else {
+					trace("NUMBER = " + ev.target.id );
+				}
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				BaseTransaction.set_to_global_endpoint(myuserservice1, this);
+			}
+			
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<s:CallResponder id="getUser" result="getUser_resultHandler(event)"
+						 fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)"/>
+		<smyuserservice:SmyuserService id="myuserservice1"
+									   fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" 
+									   showBusyCursor="true"/>
+		
+	</fx:Declarations>
+	<s:BorderContainer width="894" height="100%" borderColor="#01B8FC" borderVisible="false"
+					   dropShadowVisible="false">
+		<!--mx:Image source="@Embed('/images/stech.png')" alpha="0.5" x="-1" y="299"/-->
+		<mx:Form y="72" fontWeight="bold" color="#939292" fontSize="18" x="490">
+			<mx:FormItem label="ชื่อเข้าใช้งาน">
+				<s:TextInput id="txtUsername" click="clickHandler(event)" selectable="true"/>
+			</mx:FormItem>
+			<mx:FormItem label="รหัสผ่าน">
+				<s:TextInput id="txtPassword" displayAsPassword="true" click="clickHandler(event)"/>
+			</mx:FormItem>
+		</mx:Form>
+		<s:HGroup x="585" y="230" fontSize="24" fontWeight="bold" color="#939292">
+			<mx:Button id="btnLogin" label="เข้าใช้งาน" width="130" height="82"
+					   icon="@Embed(source='images/loginBTN.png')" labelPlacement="bottom"
+					   click="mainButtonClickHandler(event,'login')"/>
+			<mx:Button id="btnExit" label="ออก" width="100" height="82"
+					   icon="@Embed(source='images/exitBTN.png')" labelPlacement="bottom"
+					   click="mainButtonClickHandler(event,'exit')"/>
+		</s:HGroup>
+		<s:BorderContainer width="500" height="332"
+						   backgroundColor="#FFFFFF" borderColor="#0089FD" borderWeight="1" 
+						   borderVisible="false" y="8" x="8">
+			<s:layout>
+				<s:VerticalLayout verticalAlign="middle" horizontalAlign="center"/>
+			</s:layout>
+			<mx:Image source="@Embed('/images/SuperRichPOS.png')"/>
+			<!--s:Label text="Super Rich POS"  color="#FCFDFE" fontWeight="bold" fontSize="36" textDecoration="none" x="22" y="9"/-->
+		</s:BorderContainer>
+		
+		<s:Label text="{ourCompany}" x="10" y="309"/>
+		<s:Label text="{ourServiceDBVersion}" x="10" y="326"/>
+		<s:ToggleButton id="keyPadBtn" x="829" y="95" width="58" height="45"
+				   click="keyPad_clickHandler(event)" cornerRadius="10"
+				   icon="@Embed('images/keyboard.png')"/>
+	</s:BorderContainer>
+</s:Group>

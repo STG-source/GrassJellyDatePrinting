@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="100%" height="100%"
+		 initialize="group1_initializeHandler(event)">
+
+	<fx:Style source="kpStyle.css"/>
+
+	<fx:Metadata>
+		[Event(name="exitEvent", type="events.ExitEvent")]
+	</fx:Metadata>
+
+	<fx:Script>
+		<![CDATA[	
+			import events.ExitEvent;
+
+			import mx.events.FlexEvent;
+
+			import utilities.MyUtil;
+
+			private var event1:Event;
+			private var btnName1:String;
+
+			[Bindable] private var ourCompany:String;
+			[Bindable] public var ourServiceDBVersion:String = "";
+
+			protected function group1_initializeHandler(event:FlexEvent):void
+			{
+				ourCompany = "Version " + MyUtil.getAppLabel() +
+					GlobalVariable.infoTO +
+					"  By " + MyUtil.OUR_COMPANY;
+			}
+
+			protected function mainButtonClickHandler(ev:Event, btnName:String):void{
+				var evObj:ExitEvent;
+				evObj = new ExitEvent(ExitEvent.EXIT, ev.target as Button, btnName, "default");
+				dispatchEvent(evObj);
+			}
+
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+	</fx:Declarations>
+
+	<s:BorderContainer width="100%" height="100%" borderVisible="false" backgroundColor="#ECEAEA" backgroundAlpha="0.75">
+		<s:BorderContainer width="700" height="350"  borderColor="#FC0D01" horizontalCenter="0" verticalCenter="0" >
+			<s:BorderContainer width="500" height="332"
+							   backgroundColor="#FFFFFF" borderColor="#0089FD" borderWeight="1" 
+							   borderVisible="false" y="8" x="8">
+				<s:layout>
+					<s:VerticalLayout verticalAlign="middle" horizontalAlign="center"/>
+				</s:layout>
+				<mx:Image source="@Embed('/images/SuperRichPOS.png')"/>
+			</s:BorderContainer>
+
+			<s:VGroup x="531" y="8" fontSize="24" fontWeight="bold" color="#939292" horizontalAlign="center">
+				<!--- Temporary dropped "btnLogout" button since it produce missing Bill number -->
+				<mx:Button id="btnExit" label="จบการทำงาน" width="160" height="107"
+						   icon="@Embed(source='images/exitBTN.png')" labelPlacement="bottom"
+						   click="mainButtonClickHandler(event,'exit')"/>
+
+				<mx:Button id="btnLogout" label="ลงชื่อออก" width="160" height="107"
+						   icon="@Embed(source='images/logoutBTN.png')" labelPlacement="bottom"
+						   click="mainButtonClickHandler(event,'logout')"
+						   visible="false"/>
+
+				<mx:Button id="btnBack" label="กลับ" width="160" height="107"
+						   icon="@Embed(source='images/backBTN.png')" labelPlacement="bottom"
+						   click="mainButtonClickHandler(event,'back')"/>
+			</s:VGroup>
+			<s:Label text="{ourCompany}" x="10" y="309"/>
+			<s:Label text="{ourServiceDBVersion}" x="10" y="326"/>
+		</s:BorderContainer>
+	</s:BorderContainer>
+</s:Group>

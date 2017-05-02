@@ -1,0 +1,30 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+.fromDateChooser {
+	selectionColor: haloGreen;
+	todayStyleName: customTodayStyleName;
+}
+
+.toDateChooser {
+	selectionColor: haloOrange;
+	todayStyleName: customTodayStyleName;
+	fontSize: 24;
+}
+
+.customTodayStyleName {
+	selectionColor: haloGreen;
+	todayColor: haloGreen;
+	color: #DD0000;
+	fontStyle: italic;
+	fontWeight: bold;
+}
+
+.generalForm {
+	fontSize: 20;
+}
+
+.generalForm2 {
+	fontSize: 16;
+}

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="400" height="300">
+
+	<fx:Script>
+		<![CDATA[
+			import components.TitleKeypad;
+			
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+
+			import spark.components.TextInput;
+
+			private var _keypaymentFirstInput:Boolean = true;
+			private var _targetTextInput:TextInput = null; //moneyReceipt
+			public var moneyReceiptText:String;
+			public var CheckOut:Boolean = false;
+
+			public function set targetTextInput(val:TextInput):void {
+				_targetTextInput = val;
+			}
+
+			public function get targetTextInput():TextInput {
+				return _targetTextInput;
+			}
+
+			protected function keypadGroup_clickHandler(event:MouseEvent):void
+			{
+				if (_targetTextInput == null)
+					return;
+
+				if ('keypadOK' == event.target.id) {
+
+				}
+
+				if (_keypaymentFirstInput) {
+					_keypaymentFirstInput = false;
+					moneyReceiptText     = "";
+				}
+//				moneyReceiptText = moneyReceipt.text;
+				moneyReceiptText = _targetTextInput.text;
+
+				switch (event.target.id) {
+					case 'keypadBackSpace':
+						moneyReceiptText = moneyReceiptText.substr(0, moneyReceiptText.length-1);
+
+						var arr:Array;
+						arr = moneyReceiptText.split(".");
+
+						if(arr.length == 2)
+						{
+							keypadDec.enabled = false;
+						}
+						else
+						{
+							keypadDec.enabled = true;
+						}
+
+						break;
+					case 'keypadClear':
+						moneyReceiptText = "";
+						keypadDec.enabled = true;
+						break;
+					case 'keypad0':
+						moneyReceiptText += '0';
+						break;
+					case 'keypad1':
+						moneyReceiptText += '1';
+						break;
+					case 'keypad2':
+						moneyReceiptText += '2';
+						break;
+					case 'keypad3':
+						moneyReceiptText += '3';
+						break;
+					case 'keypad4':
+						moneyReceiptText += '4';
+						break;
+					case 'keypad5':
+						moneyReceiptText += '5';
+						break;
+					case 'keypad6':
+						moneyReceiptText += '6';
+						break;
+					case 'keypad7':
+						moneyReceiptText += '7';
+						break;
+					case 'keypad8':
+						moneyReceiptText += '8';
+						break;
+					case 'keypad9':
+						moneyReceiptText += '9';
+						break;
+					case 'keypad00':
+						moneyReceiptText += '00';
+						break;
+					case 'keypadDec':
+						moneyReceiptText += '.';
+						keypadDec.enabled = false;
+						break;
+					default:
+						break;
+				}
+
+//				moneyReceipt.text = moneyReceiptText;
+//				moneyReceipt.setFocus();
+//				moneyReceipt.selectAll();
+
+				trace("moneyReceiptText = " + moneyReceiptText);
+
+				_targetTextInput.text = moneyReceiptText;
+				_targetTextInput.setFocus();
+				_targetTextInput.selectAll();
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>	
+	</fx:Declarations>
+
+	<s:Panel width="315" height="248" x="1" y="0" id="panel1"
+			 backgroundColor="#FAE6C3" chromeColor="#EE8015"
+			 borderVisible="false">
+		<s:HGroup id="HGroup1" x="1" y="-30" width="312" height="248">
+			<s:VGroup width="74" height="249" gap="9" id="vg1">
+				<mx:Button id="keypad7" width="72" height="55" label="7" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypad4" width="72" height="55" label="4" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypad1" width="72" height="55" label="1" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypadClear" width="72" height="55" label="C"
+						   labelPlacement="bottom" styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+			</s:VGroup>
+			<s:VGroup width="74" height="249" gap="9" id="vg2">
+				<mx:Button id="keypad8" width="72" height="55" label="8" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypad5" width="72" height="55" label="5" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypad2" width="72" height="55" label="2" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypad0" width="72" height="55" label="0" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+			</s:VGroup>
+			<s:VGroup width="73" height="250" gap="9" id="vg3">
+				<mx:Button id="keypad9" width="72" height="55" label="9" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypad6" width="72" height="55" label="6" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypad3" width="72" height="55" label="3" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypad00" width="72" height="55" label="00" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+			</s:VGroup>
+			<s:VGroup id="vg4" width="73" height="249" gap="9">
+				<mx:Button id="keypadBackSpace" width="72" height="55"
+						   icon="@Embed(source='images/Metro-Back-Black-32.png')"
+						   labelPlacement="bottom" styleName="chkBoxFont"
+						   click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypadOK" width="72" height="119" label="OK" labelPlacement="bottom"
+						   styleName="chkBoxFont" click="keypadGroup_clickHandler(event)"/>
+				<mx:Button id="keypadDec" width="72" height="55" label="."
+						   click="keypadGroup_clickHandler(event)" fontSize="24"
+						   labelPlacement="bottom" styleName="chkBoxFont" textAlign="center"/>
+			</s:VGroup>
+		</s:HGroup>
+	</s:Panel>
+</s:Group>

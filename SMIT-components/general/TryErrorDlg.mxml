@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="250" height="106"
+		 fontSize="18"
+		 initialize="initializeHandler(event)"
+		 close="titlewindow_closeHandler(event)">
+
+	<s:layout>
+		<s:VerticalLayout verticalAlign="middle" horizontalAlign="center"/>
+	</s:layout>
+
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+
+			protected var _doRetry:Boolean = false;
+			protected var _viewOkCancel:Boolean = false;
+			[Bindable] protected var _thisDlgTitle:String = "เกิดความผิดพลาดในการติดต่อฐานข้อมูล";
+			[Bindable] protected var _thisDlgLabel:String = "กดปุ่ม เชื่อมต่อ เพื่อดำเนินการอีกครั้ง";
+
+			public function get doRetry():Boolean
+			{
+				return _doRetry;
+			}
+
+			public function set viewOkCancel(viewStat:Boolean):void
+			{
+				_viewOkCancel = viewStat;
+			}
+
+			protected function initializeHandler(event:FlexEvent):void
+			{
+				this.title = _thisDlgTitle;
+				switchToOkCancel();
+			}
+
+			public function setTitleAndLabel(strTitle:String, strLabel:String):void
+			{
+				_thisDlgTitle  = strTitle;
+				_thisDlgLabel = strLabel;
+			}
+
+			protected function titlewindow_closeHandler(event:CloseEvent):void
+			{
+				//trace('Try Error Dialog Closing!!');
+				PopUpManager.removePopUp(this);
+			}
+
+			protected function retryFlow_clickHandler(event:MouseEvent):void
+			{
+				_doRetry = true;
+				dispatchEvent(new CloseEvent(Event.CLOSE));
+			}
+
+			protected function switchToOkCancel():void
+			{
+				if (!_viewOkCancel) {
+					var cancelBtn:Button = new Button();
+					_viewOkCancel = !_viewOkCancel;
+
+					cancelBtn.label = "ยกเลิก";
+					btnGroup.addElement(cancelBtn);
+					cancelBtn.addEventListener(MouseEvent.CLICK, click_cancelBtn);
+				}
+			}
+
+			protected function click_cancelBtn(evt:MouseEvent):void
+			{
+				trace("click_cancelBtn HOOK!!");
+				_doRetry = false;
+				dispatchEvent(new CloseEvent(Event.CLOSE));
+			}
+
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+	</fx:Declarations>
+
+	<s:Label text="{_thisDlgLabel}" />
+	<s:HGroup id="btnGroup">
+		<s:Button id="retryFlow" label="เชือมต่อ"
+				  click="retryFlow_clickHandler(event)"/>
+	</s:HGroup>
+
+</s:TitleWindow>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				autoDrawBackground="true">
+
+	<!-- Idea and concept are from
+	http://workflowflash.com/21608/editable-itemrenderer-for-flex-4-spark-list.php -->
+
+	<fx:Script>
+		<![CDATA[
+			import ItemUnit.typeListBaseDlg;
+			import events.TypeBaseEvent;
+			import spark.components.supportClasses.ListBase;
+
+			private function onChange(event:Event):void
+			{
+				var oldValue:String = labelDisplay.text;
+
+				if (oldValue != inputTxt.text) {
+					/** dispatch the data update event */
+					var list:ListBase       = this.owner as ListBase;
+					var dlg:typeListBaseDlg = list.document as typeListBaseDlg;
+					var ev:TypeBaseEvent = new TypeBaseEvent(
+													TypeBaseEvent.EDIT_TYPE_BASE,
+													TypeBaseEvent.EDIT_DB_START,
+													inputTxt.text,
+													oldValue,
+													this);
+					dlg.dispatchEvent(ev);
+				}
+			}
+
+			private function onEdit(event:Event):void
+			{
+				var list:ListBase = this.owner as ListBase;
+				if (0 == list.selectedIndex)
+					return; /** ignore to edit this case */
+
+				inputTxt.text = label;
+				isEdit(true); /** Switch to Edit Mode */
+
+				//set cursor postion to end
+				inputTxt.selectRange(inputTxt.text.length, inputTxt.text.length+1);
+				inputTxt.setFocus();
+			}
+
+			private function isEdit(value:Boolean):void
+			{
+				labelDisplay.visible = !value;
+				inputTxt.visible     =  value;
+			}
+
+			protected function inputTxt_focusOutHandler(event:FocusEvent):void
+			{
+				/** Switch to View Mode */
+				isEdit(false);
+			}
+
+		]]>
+	</fx:Script>
+
+	<!---
+	top/bottom/left/right
+	Check out "Using constraints to control component layout" on
+	http://help.adobe.com/en_US/flex/using/WS2db454920e96a9e51e63e3d11c0bf69084-7df9.html
+	-->
+	
+	<s:Label id="labelDisplay"
+			 text="{label}"
+			 doubleClickEnabled="true"
+			 doubleClick="onEdit(event)"
+			 top="7" bottom="5" left="5" right="3"/>
+
+	<s:TextInput id="inputTxt"
+				 visible="false"
+				 enter="onChange(event)"
+				 focusOut="inputTxt_focusOutHandler(event)"
+				 top="1" bottom="1" left="1" right="0"
+				 minWidth="5"/>
+
+</s:ItemRenderer>
