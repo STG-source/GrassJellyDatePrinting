@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   width="500" height="400" initialize="app_initHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.CalendarLayoutChangeEvent;
+			import mx.events.FlexEvent;
+
+			
+			protected function app_initHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			protected function selectMFGDate_changeHandler(event:CalendarLayoutChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:layout>
+		<s:VerticalLayout />
+	</s:layout>
+	<s:Spacer height="40" />
+	<s:VGroup width="100%">
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left">
+			<s:Spacer width="10%" />
+			<s:Label fontSize="24" width="30%" text="ผลิต"/>
+			<s:Spacer width="10%" />
+			<mx:DateField fontSize="24" width="30%" change="selectMFGDate_changeHandler(event)"/>
+		</s:HGroup>
+		<s:HGroup id="selectedExpBB" width="100%" verticalAlign="middle" horizontalAlign="left">
+			<s:Spacer width="10%" />
+			<s:ToggleButton cornerRadius="0" fontSize="20" label="อายุ 14 วัน" height="30"/>
+			<s:ToggleButton cornerRadius="0" fontSize="20" label="อายุ 7 วัน" height="30"/>
+			<s:ToggleButton cornerRadius="0" fontSize="20" label="กำหนดอายุเอง" height="30"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left">
+			<s:Spacer width="10%" />
+			<s:Label fontSize="24" width="30%" text="ควรบริโภคก่อน"/>
+			<s:Spacer width="10%" />
+			<mx:DateField fontSize="24" width="30%" enabled="false"/>
+		</s:HGroup>
+	</s:VGroup>
+	
+</s:WindowedApplication>
