@@ -3,15 +3,22 @@
 					   xmlns:s="library://ns.adobe.com/flex/spark" 
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
 					   width="800" height="600"
-					   initialize="app_initHandler(event)" creationComplete="app_creationCompleteHandler(event)">
+					   initialize="app_initHandler(event)"
+					   creationComplete="app_creationCompleteHandler(event)" xmlns:general="general.*">
 	<fx:Style source="ExpiredStickerUI.css"/>
 	<fx:Script>
 		<![CDATA[
+			import general.DateChooserTH;
+			import general.DateFieldTH;
+
 			import mx.collections.ArrayCollection;
 			import mx.events.CalendarLayoutChangeEvent;
 			import mx.events.FlexEvent;
 
 			import spark.components.Spinner;
+
+			private var _remaining:int = 14;
+			private var _stickerQuantities:int = 1;
 			protected function app_initHandler(event:FlexEvent):void
 			{
 				;
@@ -46,8 +53,6 @@
 				}
 			}
 
-
-			private var _remaining:int = 14;
 			private function updateExpiredBBDate():void{
 				dfExpBB.selectedDate = dfMFG.selectedDate;
 				dfExpBB.selectedDate.time = dfMFG.selectedDate.time + (_remaining * 24 * 60 * 60 * 1000);
@@ -73,6 +78,7 @@
 				initFirstExpiredBB_btn();
 				dfExpBB.selectedDate = dfMFG.selectedDate;
 				updateExpiredBBDate();
+				this.nsStickerQuantities.value = 150;
 			}
 
 			private function initFirstExpiredBB_btn():void{
@@ -92,6 +98,10 @@
 					}
 				}
 			}
+
+			protected function addStickerNumber(event:MouseEvent,stepSize:int):void{
+				nsStickerQuantities.value += stepSize;
+			}
 		]]>
 	</fx:Script>
 	<fx:Declarations>
@@ -100,14 +110,14 @@
 	<s:layout>
 		<s:VerticalLayout />
 	</s:layout>
-	<s:Spacer height="40" />
-	<s:VGroup width="100%">
+	<s:Spacer height="30" />
+	<s:VGroup width="100%" id="mainPanel">
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
 			<s:Spacer width="10%" />
 			<s:Label fontSize="32" width="20%" text="ผลิต"/>
 			<s:Spacer width="5%" />
-			<mx:DateField id="dfMFG" 
-						  fontSize="48" width="30%"
+			<general:DateFieldTH id="dfMFG"
+						  fontSize="40" width="30%"
 						  change="selectMFGDate_changeHandler(event)"/>
 		</s:HGroup>
 		<s:HGroup id="selectedExpBB" width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
@@ -122,14 +132,33 @@
 							  minimum="1" maximum="30000" stepSize="1"
 							  fontSize="32" width="15%"
 							  change="nsExpBBDate_changeHandler(event,tgBtnExpBBCustom)"/>
-			<s:Label fontSize="32" text="วัน" height="40"/>
+			<s:Label fontSize="32" text="วัน" height="40" paddingLeft="5"/>
 		</s:HGroup>
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
 			<s:Spacer width="10%" />
 			<s:Label fontSize="32" width="20%" text="ควรบริโภคก่อน"/>
 			<s:Spacer width="5%" />
-			<mx:DateField id="dfExpBB" fontSize="48" width="30%" enabled="false"/>
+			<general:DateFieldTH id="dfExpBB" fontSize="40" width="30%" enabled="false"/>
+		</s:HGroup>
+		<s:Spacer height="40" />
+		<s:HGroup id="printStickerPanel" width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
+			<s:Spacer width="10%" />
+			<s:Label width="20%" fontSize="32" text="พิมพ์สติ๊กเกอร์" height="40"/>
+			<s:Spacer width="5%" />
+			<s:NumericStepper id="nsStickerQuantities" enabled="true"
+							  minimum="1" maximum="1000000" stepSize="1"
+							  fontSize="32" width="15%" height="40"/>
+			<s:Label fontSize="32" text="ดวง" height="40" paddingLeft="20" paddingRight="20"/>
+			<s:Button label="สั่งพิมพ์" height="40" width="120" fontSize="32"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
+			<s:Spacer width="10%"/>
+			<s:Spacer width="20%"/>
+			<s:Spacer width="5%"/>
+			<s:Button label="1" height="80" width="80" fontSize="30" click="addStickerNumber(event,1)"/>
+			<s:Button label="10" height="80" width="80" fontSize="30" click="addStickerNumber(event,10)"/>
+			<s:Button label="100" height="80" width="80" fontSize="30" click="addStickerNumber(event,100)"/>
+			<s:Button label="150" height="80" width="80" fontSize="30" click="addStickerNumber(event,150)"/>
 		</s:HGroup>
 	</s:VGroup>
-	
 </s:WindowedApplication>

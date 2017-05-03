@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <actionScriptProperties analytics="false" mainApplicationPath="ExpiredStickerUI.mxml" projectUUID="550512de-1733-4760-9df1-d558359bd95c" version="10">
   <compiler additionalCompilerArguments="-locale en_US -debug=true -omit-trace-statements=false -includes=mx.managers.systemClasses.MarshallingSupport" autoRSLOrdering="true" copyDependentFiles="true" flex3CompatMode="false" flexSDK="Flex 4.6.0" fteInMXComponents="true" generateAccessible="true" htmlExpressInstall="true" htmlGenerate="false" htmlHistoryManagement="false" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderLocation="C:/inetpub/wwwroot/ExpiredStickerUI" outputFolderPath="bin-debug" removeUnusedRSL="true" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="true" useDebugRSLSwfs="true" verifyDigests="true" warn="true">
-    <compilerSourcePath/>
+    <compilerSourcePath>
+      <compilerSourcePathEntry kind="1" linkType="1" path="${DOCUMENTS}/github_as/GrassJellyDatePrinting/Groot-components"/>
+    </compilerSourcePath>
     <libraryPath defaultLinkType="0">
       <libraryPathEntry kind="4" path="">
         <excludedEntries>
