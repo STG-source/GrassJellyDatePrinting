@@ -1,0 +1,13 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+
+#dfMFG
+{
+	content-background-color: #c4fffe;
+}
+#dfExpBB
+{
+	content-background-color: #F9FF49;
+}
