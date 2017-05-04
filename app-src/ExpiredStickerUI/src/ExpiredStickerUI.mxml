@@ -8,13 +8,16 @@
 	<fx:Style source="ExpiredStickerUI.css"/>
 	<fx:Script>
 		<![CDATA[
+			import Printing.IPrintable;
+			import Printing.StickerLabel;
+			
 			import general.DateChooserTH;
 			import general.DateFieldTH;
-
+			
 			import mx.collections.ArrayCollection;
 			import mx.events.CalendarLayoutChangeEvent;
 			import mx.events.FlexEvent;
-
+			
 			import spark.components.Spinner;
 
 			private var _remaining:int = 14;
@@ -102,6 +105,22 @@
 			protected function addStickerNumber(event:MouseEvent,stepSize:int):void{
 				nsStickerQuantities.value += stepSize;
 			}
+
+			protected function nsStickerQuantities_changeHandler(event:Event):void
+			{
+				var current:Number = nsStickerQuantities.value;
+				isNaN(current) ? this.nsStickerQuantities.value = _stickerQuantities : _stickerQuantities = current;
+			}
+
+			protected function printSticker_clickHandler(event:Event):void{
+				var printer:IPrintable = new StickerLabel();
+				printer.quantities = nsStickerQuantities.value;
+				printer.setTextLabel = "\nThis is a book\\Testing 1\\Testing 2\\Testing 3\\";
+				printer.done = function ():void{
+					trace("Printer is done printing");
+				};
+				printer.printLabel();
+			}
 		]]>
 	</fx:Script>
 	<fx:Declarations>
@@ -128,10 +147,11 @@
 			<s:ToggleButton cornerRadius="0" fontSize="32" label="7 วัน" height="40" click="selectRemainingDate(event,7)"/>
 			<s:ToggleButton id="tgBtnExpBBCustom" cornerRadius="0" fontSize="32" label="กำหนดเอง" height="40"
 							click="selectRemainingDate(event,nsExpBBDate.value)"/>
-			<s:NumericStepper id="nsExpBBDate" enabled="false"
-							  minimum="1" maximum="30000" stepSize="1"
-							  fontSize="32" width="15%"
-							  change="nsExpBBDate_changeHandler(event,tgBtnExpBBCustom)"/>
+			<s:NumericStepper id="nsExpBBDate" width="15%"
+							  change="nsExpBBDate_changeHandler(event,tgBtnExpBBCustom)"
+							  enabled="false" focusIn="nsExpBBDate.textDisplay.selectAll();"
+							  fontSize="32" maximum="30000" minimum="1" stepSize="1"
+							  textAlign="right"/>
 			<s:Label fontSize="32" text="วัน" height="40" paddingLeft="5"/>
 		</s:HGroup>
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
@@ -145,20 +165,24 @@
 			<s:Spacer width="10%" />
 			<s:Label width="20%" fontSize="32" text="พิมพ์สติ๊กเกอร์" height="40"/>
 			<s:Spacer width="5%" />
-			<s:NumericStepper id="nsStickerQuantities" enabled="true"
-							  minimum="1" maximum="1000000" stepSize="1"
-							  fontSize="32" width="15%" height="40"/>
+			<s:NumericStepper id="nsStickerQuantities" width="15%" height="40"
+							  change="nsStickerQuantities_changeHandler(event)" enabled="true"
+							  focusIn="nsStickerQuantities.textDisplay.selectAll();" fontSize="32"
+							  maximum="1000000" minimum="1" stepSize="1" textAlign="right"/>
 			<s:Label fontSize="32" text="ดวง" height="40" paddingLeft="20" paddingRight="20"/>
-			<s:Button label="สั่งพิมพ์" height="40" width="120" fontSize="32"/>
+			<s:Spacer width="10%" />
+			<s:Button label="สั่งพิมพ์" height="40" width="120" fontSize="32" click="printSticker_clickHandler(event)"/>
 		</s:HGroup>
+		<s:Spacer height="5" />
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
 			<s:Spacer width="10%"/>
-			<s:Spacer width="20%"/>
+			<s:Label width="20%" fontSize="32" text="เพิ่มจำนวน" height="40"/>
 			<s:Spacer width="5%"/>
 			<s:Button label="1" height="80" width="80" fontSize="30" click="addStickerNumber(event,1)"/>
 			<s:Button label="10" height="80" width="80" fontSize="30" click="addStickerNumber(event,10)"/>
 			<s:Button label="100" height="80" width="80" fontSize="30" click="addStickerNumber(event,100)"/>
 			<s:Button label="150" height="80" width="80" fontSize="30" click="addStickerNumber(event,150)"/>
+			<s:Button label="300" height="80" width="80" fontSize="30" click="addStickerNumber(event,300)"/>
 		</s:HGroup>
 	</s:VGroup>
 </s:WindowedApplication>

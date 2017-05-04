@@ -5,8 +5,10 @@ package SMITPOSAssist
 	 * http://cookbooks.adobe.com/post_Read_Write_to_serial_port_from_Adobe_Air-17484.html
 	 */
 
-	import events.POSAssistEvent;
-	
+	/*
+	 * this package and class was modified for github opensource project (Groot-components) 
+	 * have updated from since 04/05/2560 0:50 AM
+	*/
 	import flash.display.DisplayObject;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -18,10 +20,6 @@ package SMITPOSAssist
 	import flash.utils.Timer;
 	
 	import mx.managers.SystemManager;
-
-	[Event(name=POSAssistEvent.CADR_JUST_CLOSE,           type="events.POSAssistEvent")]
-	[Event(name=POSAssistEvent.CADR_JUST_OPEN,            type="events.POSAssistEvent")]
-	[Event(name=POSAssistEvent.CADR_WAIT_TOCLOSE_TIMEOUT, type="events.POSAssistEvent")]
 
 	/**
 	 * This class inherite from "EventDispatcher class" to
@@ -35,9 +33,6 @@ package SMITPOSAssist
 		public static const CMD_FORCE_PRINT:String  = "\tFORCEPRINT";
 		public static const CMD_PRINT_LABEL:String  = "\vPRINT_LABEL"; /* UNICODE sending format */
 		public static const CMD_PRINT_TO_KITCHEN:String  = "\vKITCHEN_PRINT"; /* UNICODE sending format */
-		public static const CMD_RFID_INIT_SL500:String = "\tRFID_INIT_SL500";
-		public static const CMD_RFID_CLOSE_SL500:String = "\tRFID_CLOSE_SL500";
-		public static const CMD_RFID_REQ_CARD_ID_SL500:String = "\tRFID_REQ_CARD_ID_SL500";
 
 		public static const STATUS_OK:String 	 = "OK";
 		public static const STATUS_NG:String 	 = "NG";
@@ -116,13 +111,6 @@ package SMITPOSAssist
 
 			_sleepAwhile = new Timer(CMD_INTERVAL, LOOPCOUNT/2);
 			_sleepAwhile.addEventListener(TimerEvent.TIMER_COMPLETE, cmdRWRReturn);
-
-			_cadrStatTime = new Timer(CADR_STATE_LOOP_INTERVAL, CADR_STATE_CHK_TIME);
-			_cadrStatTime.addEventListener(TimerEvent.TIMER, cadrStatChkLoop);
-			_cadrStatTime.addEventListener(TimerEvent.TIMER_COMPLETE, cadrStatChkTimeout);
-			
-			/** Trap the POSAssistEvent */
-			addEventListener(POSAssistEvent.RESULT_CMD_RFID_REQ_CARD_ID_SL500, result_req_card_id, false, HIGHEST_PRIORITY);
 		}
 
 		public function get mainSocket():Socket
@@ -140,9 +128,6 @@ package SMITPOSAssist
 			switch (type) {
 				case Event.CONNECT:
 					_mainSocket.addEventListener(Event.CONNECT, listener, false, MID_PRIORITY);
-					break;
-				case POSAssistEvent.RESULT_CMD_RFID_REQ_CARD_ID_SL500:
-					addEventListener(type, listener, false, MID_PRIORITY);
 					break;
 				case Event.CLOSE:
 					_mainSocket.addEventListener(Event.CLOSE, listener, false, MID_PRIORITY);
@@ -277,16 +262,6 @@ package SMITPOSAssist
 				var arr:Array;
 				arr = recvBuffer.split(SPLIT_TEXT);
 				trace(arr[0] + " : " + arr[1] + " : " + arr[2]);
-
-				if (arr[0] == CMD_RFID_REQ_CARD_ID_SL500) {
-					var evData:Object = new Object;
-					evData.status = arr[1];
-					evData.data   = arr[2];
-
-					var ev:POSAssistEvent = new POSAssistEvent(POSAssistEvent.RESULT_CMD_RFID_REQ_CARD_ID_SL500,
-												evData);
-					dispatchEvent(ev);
-				}
 
 			}
 			catch(err:Error)
@@ -453,55 +428,6 @@ package SMITPOSAssist
 		}
 
 		/**
-		 * Loop detect cash drawer status
-		 */
-		protected function cadrStatChkLoop(event:TimerEvent):void
-		{
-			var eventObj:POSAssistEvent;
-			var eventType:String;
-
-			if (isCadrOpen) {
-				trace('isCadrOpen: YES!');
-				eventType = POSAssistEvent.CADR_JUST_OPEN;
-
-				/** Re-check again in next loop */
-				cmdRWR(POSAssist.CMD_GET_CADRSTAT, retCADRStat);
-			}
-			else {
-				trace('isCadrOpen: NO!');
-				_cadrStatTime.stop();
-				_cadrStatTime.reset();
-
-				eventType = POSAssistEvent.CADR_JUST_CLOSE;
-			}
-
-			if (isCadrOpen != lastCadrStatOpen) {
-				/**
-				 * To decrease number of event dispatch
-				 */
-
-				eventObj = new POSAssistEvent(eventType);
-				SystemManager.getSWFRoot(this).dispatchEvent(eventObj);
-
-				lastCadrStatOpen = isCadrOpen;
-			}
-		}
-
-		/**
-		 * Cash drawer status checking time out
-		 */
-		protected function cadrStatChkTimeout(event:TimerEvent):void
-		{
-			var eventObj:POSAssistEvent;
-
-			trace('[  [cadrStatChkTimeout]  ]');
-			_cadrStatTime.reset();
-
-			eventObj = new POSAssistEvent(POSAssistEvent.CADR_WAIT_TOCLOSE_TIMEOUT);
-			SystemManager.getSWFRoot(this).dispatchEvent(eventObj);
-		}
-
-		/**
 		 * To print the label
 		 */
 		public function printLabel(prnText:String = null):void
@@ -537,45 +463,6 @@ package SMITPOSAssist
 
 			/** Sending format is same to CMD_PRINT_LABEL **/
 			sendTextDatCmd(strCmd, "unicode"); 
-		}
-
-		/**
-		 * To initialize the SL500 Mifare RFID reader
-		 */
-		public function rfid_init_sl500():void
-		{
-			trace('[cmd CMD_RFID_INIT_SL500]__call: ');
-			sendTextDatCmd(CMD_RFID_INIT_SL500);
-		}
-
-		/**
-		 * To close the SL500 Mifare RFID reader
-		 */
-		public function rfid_close_sl500():void
-		{
-			trace('[cmd CMD_RFID_CLOSE_SL500]__call: ');
-			sendTextDatCmd(CMD_RFID_CLOSE_SL500);
-		}
-
-		/**
-		 * To request the SL500 Mifare RFID
-		 */
-		public function rfid_req_cardID_sl500():void
-		{
-			trace('[cmd CMD_RFID_REQ_CARD_ID_SL500]__call: ');
-			sendTextDatCmd(CMD_RFID_REQ_CARD_ID_SL500);
-		}
-
-		protected function result_req_card_id(result:POSAssistEvent):void
-		{
-			if (result.eventObj.status == POSAssist.STATUS_OK)
-				trace("POSAssist: result.return_eventObj.status == OK");
-			else
-				trace("POSAssist: result.return_eventObj.status == NG");
-
-			/** Forward this message to itsOwner */
-			if (itsOwner != null)
-				itsOwner.dispatchEvent(result);
 		}
 
 	} /** class POSAssist */
