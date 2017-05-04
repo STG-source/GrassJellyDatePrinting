@@ -63,7 +63,7 @@ package Printing
 				_timer = new Timer(500,_quantities);
 				_timer.addEventListener(TimerEvent.TIMER,function(event:TimerEvent):void{
 					_posAssistOperation.directPrintLabel(_textLabel);
-					trace("แกะตัวที่ : "+_timer.currentCount);
+					trace("สินค้าชิ้นที่ : "+_timer.currentCount +"\n"+"Label is "+_textLabel+"\n");
 				});
 				_timer.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
 					trace("Completed!");
