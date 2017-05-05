@@ -1,9 +1,8 @@
 package Printing
 {
 	import SMITPOSAssist.POSAssist;
-	
 	import SystemBase.POSAssistOperation;
-	
+
 	import flash.events.*;
 	import flash.utils.*;
 	
@@ -14,16 +13,21 @@ package Printing
 		private var _timer:Timer;
 		private var _posAssistObj:POSAssist;
 		private var _posAssistOperation:POSAssistOperation;
-		private var _isBusy:Boolean = false;
+
 		public function StickerLabel()
 		{
 			// Init PosAssist
 			_posAssistObj = new POSAssist();
 			_posAssistObj.connect(POSAssist.DEFAULT_HOST_2,POSAssist.DEFAULT_PORT);
-			
+
 			_posAssistOperation = new POSAssistOperation();
 			_posAssistOperation.objPOSAssist = _posAssistObj;
 			// Init PosAssistOperation
+		}
+
+		private var _isBusy:Boolean = false;
+		public function get isBusy():Boolean{
+			return _isBusy;
 		}
 
 		private var _textLabel:String = null;
@@ -61,6 +65,11 @@ package Printing
 		}
 		public function printLabel():void
 		{
+			if(_isBusy)
+			{
+				trace("Printer is Busy!!");
+				return;
+			}
 			try{
 				_timer = new Timer(500,_quantities);
 				_timer.addEventListener(TimerEvent.TIMER,function(event:TimerEvent):void{
@@ -73,6 +82,7 @@ package Printing
 					_timer.stop();
 					_timer.reset();
 					_done();
+					_isBusy = false;
 					_posAssistObj.disconnect();
 				});
 				_timer.start();

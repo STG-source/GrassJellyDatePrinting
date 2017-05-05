@@ -130,9 +130,19 @@
 					"\\"+
 					"\\"+
 					"\\";
-				printer.done = function ():void{
+				printer.done = function():void{
 					trace("printSticker_clickHandler : Printer is done printing");
+					var waitForPrint:Timer = new Timer(1000,1);
+					waitForPrint.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
+						btnOrderPrint.enabled = true;
+					});
+					waitForPrint.start();
 				};
+				printer.fail = function():void{
+					trace("printSticker_clickHandler : Printer is fail printing");
+					btnOrderPrint.enabled = true;
+				};
+				btnOrderPrint.enabled = false;
 				printer.printLabel();
 			}
 		]]>
@@ -185,7 +195,7 @@
 							  maximum="1000000" minimum="1" stepSize="1" textAlign="right"/>
 			<s:Label fontSize="32" text="ดวง" height="40" paddingLeft="20" paddingRight="20"/>
 			<s:Spacer width="10%" />
-			<s:Button label="สั่งพิมพ์" height="40" width="120" fontSize="32" click="printSticker_clickHandler(event)"/>
+			<s:Button id="btnOrderPrint" label="สั่งพิมพ์" height="40" width="120" fontSize="32" click="printSticker_clickHandler(event)"/>
 		</s:HGroup>
 		<s:Spacer height="5" />
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
