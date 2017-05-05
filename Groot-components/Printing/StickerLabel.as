@@ -78,7 +78,7 @@ package Printing
 				return;
 			}
 			try{
-				_timer = new Timer(500,_quantities);
+				_timer = new Timer(1000,_quantities);
 				_timer.addEventListener(TimerEvent.TIMER,function(event:TimerEvent):void{
 					var textTemp:String = _textLabel.replace("\n","\n"+_timer.currentCount)
 					_posAssistOperation.directPrintLabel(textTemp);
