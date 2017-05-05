@@ -83,7 +83,7 @@
 				initFirstExpiredBB_btn();
 				dfExpBB.selectedDate = dfMFG.selectedDate;
 				updateExpiredBBDate();
-				this.nsStickerQuantities.value = 150;
+				nsStickerQuantities.value = 0;
 			}
 
 			private function initFirstExpiredBB_btn():void{
@@ -111,10 +111,17 @@
 			protected function nsStickerQuantities_changeHandler(event:Event):void
 			{
 				var current:Number = nsStickerQuantities.value;
-				isNaN(current) ? this.nsStickerQuantities.value = _stickerQuantities : _stickerQuantities = current;
+				isNaN(current) ? nsStickerQuantities.value = 0 : _stickerQuantities = current;
 			}
 
 			protected function printSticker_clickHandler(event:Event):void{
+
+				if(nsStickerQuantities.value <= 0)
+				{
+					trace("Sticker Number is 0!!!");
+					return;
+				}
+
 				var printer:IPrintable = new StickerLabel();
 				var dateFormat:DateTimeFormatter = new DateTimeFormatter();
 				dateFormat.dateTimePattern = "dd/mm/yy";
@@ -192,7 +199,9 @@
 			<s:NumericStepper id="nsStickerQuantities" width="15%" height="40"
 							  change="nsStickerQuantities_changeHandler(event)" enabled="true"
 							  focusIn="nsStickerQuantities.textDisplay.selectAll();" fontSize="32"
-							  maximum="1000000" minimum="1" stepSize="1" textAlign="right"/>
+							  maximum="1000000" minimum="0" stepSize="1" textAlign="right"
+							  value="0"
+							  />
 			<s:Label fontSize="32" text="ดวง" height="40" paddingLeft="20" paddingRight="20"/>
 			<s:Spacer width="10%" />
 			<s:Button id="btnOrderPrint" label="สั่งพิมพ์" height="40" width="120" fontSize="32" click="printSticker_clickHandler(event)"/>

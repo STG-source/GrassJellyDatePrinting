@@ -46,7 +46,7 @@ package Printing
 		private var _quantities:Number = 1;
 		public function set quantities(value:Number):void{
 
-			if(value <= 0 || isNaN(value))
+			if(value < 0 || isNaN(value))
 				throw new Error("Sticker Number Our of range! , Please set the number that it higher than 0 or not \"NaN\"");
 
 			_quantities = value;
@@ -65,7 +65,14 @@ package Printing
 		}
 		public function printLabel():void
 		{
-			if(_isBusy)
+			if(_quantities <= 0)
+			{
+				trace("No Sticker to Print");
+				_isBusy = false;
+				_fail();
+				return;
+			}
+			else if(_isBusy)
 			{
 				trace("Printer is Busy!!");
 				return;
