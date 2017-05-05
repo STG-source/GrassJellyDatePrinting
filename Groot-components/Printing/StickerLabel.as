@@ -6,6 +6,8 @@ package Printing
 	
 	import flash.events.*;
 	import flash.utils.*;
+	
+	import spark.skins.spark.StackedFormHeadingSkin;
 
 	public dynamic class StickerLabel implements IPrintable
 	{
@@ -62,7 +64,8 @@ package Printing
 			try{
 				_timer = new Timer(500,_quantities);
 				_timer.addEventListener(TimerEvent.TIMER,function(event:TimerEvent):void{
-					_posAssistOperation.directPrintLabel(_textLabel);
+					var textTemp:String = _textLabel.replace("\n","\n"+_timer.currentCount)
+					_posAssistOperation.directPrintLabel(textTemp);
 					trace("สินค้าชิ้นที่ : "+_timer.currentCount +"\n"+"Label is "+_textLabel+"\n");
 				});
 				_timer.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{

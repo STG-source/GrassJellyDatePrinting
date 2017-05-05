@@ -121,8 +121,14 @@
 
 				printer.quantities = nsStickerQuantities.value;
 				printer.setTextLabel = "\n" +
+					"\\"+
 					"\\ผลิต : "+ dateFormat.format(dfMFG.selectedDate.toString())+
 					"\\หมดอายุ : "+ dateFormat.format(dfExpBB.selectedDate.toString())+
+					"\\"+
+					"\\"+
+					"\\"+
+					"\\"+
+					"\\"+
 					"\\";
 				printer.done = function ():void{
 					trace("printSticker_clickHandler : Printer is done printing");
