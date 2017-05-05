@@ -83,7 +83,7 @@
 				initFirstExpiredBB_btn();
 				dfExpBB.selectedDate = dfMFG.selectedDate;
 				updateExpiredBBDate();
-				nsStickerQuantities.value = 0;
+				nsStickerQuantities.value = 150;
 			}
 
 			private function initFirstExpiredBB_btn():void{
