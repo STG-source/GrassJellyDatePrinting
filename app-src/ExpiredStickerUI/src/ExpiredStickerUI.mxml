@@ -128,7 +128,7 @@
 
 				var printer:IPrintable = new StickerLabel();
 				var dateFormat:DateTimeFormatter = new DateTimeFormatter();
-				dateFormat.dateTimePattern = "dd/mm/yy";
+				dateFormat.dateTimePattern = "dd/MM/yy";
 
 				printer.quantities = nsStickerQuantities.value;
 				printer.setTextLabel = "\n" +
