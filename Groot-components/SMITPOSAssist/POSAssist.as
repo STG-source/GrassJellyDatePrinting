@@ -6,7 +6,7 @@ package SMITPOSAssist
 	 */
 
 	import events.POSAssistEvent;
-	
+
 	import flash.display.DisplayObject;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -16,7 +16,7 @@ package SMITPOSAssist
 	import flash.events.TimerEvent;
 	import flash.net.Socket;
 	import flash.utils.Timer;
-	
+
 	import mx.managers.SystemManager;
 
 	[Event(name=POSAssistEvent.CADR_JUST_CLOSE,           type="events.POSAssistEvent")]
@@ -50,17 +50,20 @@ package SMITPOSAssist
 		public static const CADR_OPEN:String	 = "CADR_OPEN";
 		public static const CADR_CLOSE:String	 = "CADR_CLOSE";
 
-		protected static const MAIN_PORT:Number  = 5333;
+		public static const MAIN_PORT:Number  = 5333;
+		public static const MAIN_PORT_PS3315:Number  = 5331;
 
 		public static const DEFAULT_HOST:String = "localhost";
+		public static const DEFAULT_HOST_2:String = "127.0.0.1";
 		public static const DEFAULT_PORT:Number = MAIN_PORT;
-		
+
 		/** Event listener, the higher the number, the higher the priority. */
 		public static const HIGHEST_PRIORITY:int = 10;
 		public static const MID_PRIORITY:int     = 5;
 
 		/** Network Interface Port **/
 		public static const NET_CASH_DRAWER:Number = MAIN_PORT;
+		public static const NET_CASH_DRAWER_PS3315:Number = MAIN_PORT_PS3315;
 		public static const NET_CUSTOMER_DISPLAY:Number = 5334;
 		public static const NET_RFID_RW:Number = 5339;
 
@@ -81,7 +84,7 @@ package SMITPOSAssist
 
 		public var _doCallFunc:Function;
 		public var _reqCmd:String;
-		
+
 		public var recvBuffer:String;
 		public var lastStatus:Number;
 		public var returnValue:String;
@@ -117,7 +120,7 @@ package SMITPOSAssist
 			_cadrStatTime = new Timer(CADR_STATE_LOOP_INTERVAL, CADR_STATE_CHK_TIME);
 			_cadrStatTime.addEventListener(TimerEvent.TIMER, cadrStatChkLoop);
 			_cadrStatTime.addEventListener(TimerEvent.TIMER_COMPLETE, cadrStatChkTimeout);
-			
+
 			/** Trap the POSAssistEvent */
 			addEventListener(POSAssistEvent.RESULT_CMD_RFID_REQ_CARD_ID_SL500, result_req_card_id, false, HIGHEST_PRIORITY);
 		}
@@ -141,6 +144,12 @@ package SMITPOSAssist
 				case POSAssistEvent.RESULT_CMD_RFID_REQ_CARD_ID_SL500:
 					addEventListener(type, listener, false, MID_PRIORITY);
 					break;
+				case Event.CLOSE:
+					_mainSocket.addEventListener(Event.CLOSE, listener, false, MID_PRIORITY);
+					break;
+				case IOErrorEvent.IO_ERROR:
+					_mainSocket.addEventListener(IOErrorEvent.IO_ERROR, listener, false, MID_PRIORITY);
+					break;
 				default:
 					ret = -1;
 					break;
@@ -159,15 +168,15 @@ package SMITPOSAssist
 			var iResult:int = 0;
 
 			/* trace('Connect to POSAssist Proxy @IP: ' + socketIPAddr + 
-				     ' Port: '+ socketPort); */
+			' Port: '+ socketPort); */
 			if ((MAIN_PORT    == socketPort  ) && 
-			    (DEFAULT_HOST == socketIPAddr)) {
+				(DEFAULT_HOST == socketIPAddr || DEFAULT_HOST_2 == socketIPAddr)) {
 				trace('Connect to POSAssist Proxy @Main Port');
 				_mainSocket.connect(socketIPAddr, socketPort);
 
 				iResult = 0;
 			}
-			else if (DEFAULT_HOST == socketIPAddr) {
+			else if (DEFAULT_HOST == socketIPAddr || DEFAULT_HOST_2 == socketIPAddr) {
 				trace('Connect to POSAssist Proxy');
 				_mainSocket.connect(socketIPAddr, socketPort);
 
@@ -180,7 +189,17 @@ package SMITPOSAssist
 
 			return iResult;
 		}
-		
+
+		public function reconnect():void{
+			if (!_mainSocket.connected) {
+				trace('Re-connect to POSAssist ...');
+				if ((_prv_connected_address!=null)&&(_prv_connected_port!=0))
+					this.connect(_prv_connected_address, _prv_connected_port);
+				else
+					this.connect();
+			}
+		}
+
 		/**
 		 * Request to disconnect from POSAssist server
 		 */
@@ -217,7 +236,7 @@ package SMITPOSAssist
 			/** Init default properties */
 			isBSCActive = true; // NEED Double check
 		}
-		
+
 		/**
 		 * Handles on communication error
 		 */
@@ -229,7 +248,7 @@ package SMITPOSAssist
 			/** Init default properties */
 			isBSCActive = false; // NEED Double check
 		}
-		
+
 		/**
 		 * To handle Security Error ...
 		 * If this event have not been handled the following error will occur.
@@ -250,11 +269,11 @@ package SMITPOSAssist
 			try
 			{
 				recvBuffer = _mainSocket.readMultiByte(_mainSocket.bytesAvailable,
-								"ISO-8859-1");
-				
+					"ISO-8859-1");
+
 				/** Process data buffer, throw an event... */
 				trace('recvBuffer: ' + recvBuffer);
-				
+
 				var arr:Array;
 				arr = recvBuffer.split(SPLIT_TEXT);
 				trace(arr[0] + " : " + arr[1] + " : " + arr[2]);
@@ -265,7 +284,7 @@ package SMITPOSAssist
 					evData.data   = arr[2];
 
 					var ev:POSAssistEvent = new POSAssistEvent(POSAssistEvent.RESULT_CMD_RFID_REQ_CARD_ID_SL500,
-												evData);
+						evData);
 					dispatchEvent(ev);
 				}
 
@@ -283,7 +302,7 @@ package SMITPOSAssist
 		public function sendTextDatCmd(txtDatCmd:String, charSet:String = "windows-874"):void
 		{
 			if (!_mainSocket.connected) {
-				trace('Re-connect to POSAssist ...');
+				trace('sendTextDatCmd Re-connect to POSAssist ...');
 				if ((_prv_connected_address!=null)&&(_prv_connected_port!=0))
 					this.connect(_prv_connected_address, _prv_connected_port);
 				else
@@ -316,7 +335,7 @@ package SMITPOSAssist
 
 			_mainSocket.flush();
 		}
-		
+
 		/**
 		 * [R]equest & [W]ait to [R]eceive
 		 * Request POSAssist server to check latest BSCLINE
@@ -327,11 +346,11 @@ package SMITPOSAssist
 		{
 			_reqCmd     = posAssistCmd;
 			_doCallFunc = callFunc;
-			
+
 			trace('[cmdRWR]__call: ' + _reqCmd);
 			_netCmdTime.start();
 		}
-		
+
 		/**
 		 * [W]ait to ...
 		 */
@@ -342,19 +361,17 @@ package SMITPOSAssist
 			// trace("tick " + event.target.currentCount);
 			if (event.target.currentCount == STARTLOOP) {
 				sendTextDatCmd(_reqCmd);
-				trace('          |-- startCallCmdRWR @ ' + 
-					  (event.target.currentCount * CMD_INTERVAL) + 
-					  ' ms');
+				trace('          |-- startCallCmdRWR @ ' + (event.target.currentCount * CMD_INTERVAL) + ' ms');
 			}
 		}
-		
+
 		/**
 		 * [R]eceive
 		 */
 		public function cmdRWRReturn(event:TimerEvent):void
 		{
 			trace('             |__cmdRWRReturn');
-			
+
 			if (null != recvBuffer) {
 				_netCmdTime.reset();
 
@@ -376,7 +393,7 @@ package SMITPOSAssist
 				trace('             	|__Sleep For A While');
 			}
 		}
-		
+
 		/**
 		 * To Send Unlock Cash Drawer Command
 		 */
@@ -410,8 +427,8 @@ package SMITPOSAssist
 		public function cadrStatChkLoopStart():void
 		{
 			//if (!_mainSocket.connected) {
-				trace("[WORKAROUND] - DROP CADR Status Loop Mornitor in V.1.8.Build201202");
-				return;
+			trace("[WORKAROUND] - DROP CADR Status Loop Mornitor in V.1.8.Build201202");
+			return;
 			//}
 
 			//cmdRWR(POSAssist.CMD_GET_CADRSTAT, retCADRStat);
@@ -489,17 +506,17 @@ package SMITPOSAssist
 		{
 			trace('[cmd CMD_PRINT_LABEL]__call: ');
 
-//			var strCmd:String = CMD_PRINT_LABEL + 
-//				"\n007" +
-//				"\n50 - 3" +
-//				"\nชาองุ่น Grp Tea" +
-//				"\nGrape Tea Beauty Beauty" +
-//				"\nGJ/P/Full Ice/50%" +
-//				"\n17/05/2556" +
-//				"\n22:33" +
-//				"\n160B" +
-//				"\nTel 007 122 7889" +
-//				"\n";
+			//			var strCmd:String = CMD_PRINT_LABEL + 
+			//				"\n007" +
+			//				"\n50 - 3" +
+			//				"\nชาองุ่น Grp Tea" +
+			//				"\nGrape Tea Beauty Beauty" +
+			//				"\nGJ/P/Full Ice/50%" +
+			//				"\n17/05/2556" +
+			//				"\n22:33" +
+			//				"\n160B" +
+			//				"\nTel 007 122 7889" +
+			//				"\n";
 			var strCmd:String = CMD_PRINT_LABEL + prnText;
 
 			/** For label printing we have to sending in unicode format **/
@@ -561,4 +578,3 @@ package SMITPOSAssist
 
 	} /** class POSAssist */
 } /** package SMITPOSAssist */
-
