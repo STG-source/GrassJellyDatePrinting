@@ -2,24 +2,159 @@
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 					   xmlns:s="library://ns.adobe.com/flex/spark" 
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
-					   width="800" height="600" initialize="app_initHandler(event)">
+					   width="1024" height="768"
+					   initialize="app_initHandler(event)"
+					   creationComplete="app_creationCompleteHandler(event)" xmlns:general="general.*">
+	<fx:Style source="ExpiredStickerUI.css"/>
 	<fx:Script>
 		<![CDATA[
+			import Printing.IPrintable;
+			import Printing.StickerLabel;
+			
+			import general.DateChooserTH;
+			import general.DateFieldTH;
+			
 			import mx.collections.ArrayCollection;
 			import mx.events.CalendarLayoutChangeEvent;
 			import mx.events.FlexEvent;
-
+			import mx.formatters.DateFormatter;
 			
+			import spark.components.Spinner;
+			import spark.formatters.DateTimeFormatter;
+
+			private var _remaining:int = 14;
+			private var _stickerQuantities:int = 1;
 			protected function app_initHandler(event:FlexEvent):void
 			{
-				// TODO Auto-generated method stub
-				
+				;
 			}
 
 			protected function selectMFGDate_changeHandler(event:CalendarLayoutChangeEvent):void
 			{
-				// TODO Auto-generated method stub
-				
+				updateExpiredBBDate();
+			}
+
+			protected function selectRemainingDate(event:MouseEvent,remaining:int):void
+			{
+				try{
+					resetExpiredBBDate();
+					var tgBtn:ToggleButton = event.currentTarget as ToggleButton;
+					tgBtn.selected = true;
+
+					this.nsExpBBDate.enabled = tgBtn.id == "tgBtnExpBBCustom" ? true : false;
+
+					_remaining = remaining;
+					updateExpiredBBDate();
+				}catch(err:Error){
+					trace(err.message)
+				}
+			}
+			protected function nsExpBBDate_changeHandler(event:Event,tgBtn:ToggleButton):void{
+				if(tgBtn.selected)
+				{
+					var current:Number = (event.currentTarget as NumericStepper).value;
+					isNaN(current) ? this.nsExpBBDate.value = _remaining : _remaining = current;
+					updateExpiredBBDate();
+				}
+			}
+
+			private function updateExpiredBBDate():void{
+				dfExpBB.selectedDate = dfMFG.selectedDate;
+				dfExpBB.selectedDate.time = dfMFG.selectedDate.time + (_remaining * 24 * 60 * 60 * 1000);
+			}
+
+			private function resetExpiredBBDate():void{
+				var numChild:int = selectedExpBB.numChildren;
+				var childObj:Object = null;
+				for(var i:int = 0;i < numChild;i++)
+				{
+					childObj = selectedExpBB.getChildAt(i);
+					try{
+						var userControl:ToggleButton = childObj as ToggleButton;
+						userControl.selected = false;
+					}catch(err:Error){
+						//trace(err.message);
+					}
+				}
+			}
+
+			protected function app_creationCompleteHandler(event:FlexEvent):void
+			{
+				initFirstExpiredBB_btn();
+				dfExpBB.selectedDate = dfMFG.selectedDate;
+				updateExpiredBBDate();
+				nsStickerQuantities.value = 150;
+			}
+
+			private function initFirstExpiredBB_btn():void{
+				dfMFG.selectedDate = new Date();
+				var numChild:int = selectedExpBB.numChildren;
+				var childObj:Object = null;
+				for(var i:int = 0;i < numChild;i++)
+				{
+					childObj = selectedExpBB.getChildAt(i);
+					try{
+						var userControl:ToggleButton = childObj as ToggleButton;
+						//trace("This toggle button name is : "+userControl.name+" \nbutton status is : "+userControl.selected);
+						userControl.selected = true;
+						break;
+					}catch(err:Error){
+						trace(err.message);
+					}
+				}
+			}
+
+			protected function addStickerNumber(event:MouseEvent,stepSize:int):void{
+				nsStickerQuantities.value += stepSize;
+			}
+			protected function resetStickerNumber(event:MouseEvent):void{
+				nsStickerQuantities.value = 0;
+			}
+
+			protected function nsStickerQuantities_changeHandler(event:Event):void
+			{
+				var current:Number = nsStickerQuantities.value;
+				isNaN(current) ? nsStickerQuantities.value = 0 : _stickerQuantities = current;
+			}
+
+			protected function printSticker_clickHandler(event:Event):void{
+
+				if(nsStickerQuantities.value <= 0)
+				{
+					trace("Sticker Number is 0!!!");
+					nsStickerQuantities.setFocus();
+					return;
+				}
+
+				var printer:IPrintable = new StickerLabel();
+				var dateFormat:DateTimeFormatter = new DateTimeFormatter();
+				dateFormat.dateTimePattern = "dd/MM/yy";
+
+				printer.quantities = nsStickerQuantities.value;
+				printer.setTextLabel = "\n" +
+					"\\"+
+					"\\ผลิต : "+ dateFormat.format(dfMFG.selectedDate.toString())+
+					"\\หมดอายุ : "+ dateFormat.format(dfExpBB.selectedDate.toString())+
+					"\\"+
+					"\\"+
+					"\\"+
+					"\\"+
+					"\\"+
+					"\\";
+				printer.done = function():void{
+					trace("printSticker_clickHandler : Printer is done printing");
+					var waitForPrint:Timer = new Timer(1000,1);
+					waitForPrint.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
+						btnOrderPrint.enabled = true;
+					});
+					waitForPrint.start();
+				};
+				printer.fail = function():void{
+					trace("printSticker_clickHandler : Printer is fail printing");
+					btnOrderPrint.enabled = true;
+				};
+				btnOrderPrint.enabled = false;
+				printer.printLabel();
 			}
 		]]>
 	</fx:Script>
@@ -29,26 +164,78 @@
 	<s:layout>
 		<s:VerticalLayout />
 	</s:layout>
-	<s:Spacer height="40" />
-	<s:VGroup width="100%">
-		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left">
+	<s:Spacer height="30" />
+	<s:VGroup width="100%" id="mainPanel">
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
 			<s:Spacer width="10%" />
-			<s:Label fontSize="32" width="30%" text="ผลิต"/>
-			<s:Spacer width="10%" />
-			<mx:DateField fontSize="48" width="30%" change="selectMFGDate_changeHandler(event)"/>
+			<s:Label fontSize="32" width="20%" text="ผลิต"/>
+			<s:Spacer width="5%" />
+			<general:DateFieldTH id="dfMFG"
+						  fontSize="40" width="30%"
+						  change="selectMFGDate_changeHandler(event)"/>
 		</s:HGroup>
-		<s:HGroup id="selectedExpBB" width="100%" verticalAlign="middle" horizontalAlign="left">
+		<s:Spacer height="20" />
+		<s:HGroup id="selectedExpBB" width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
 			<s:Spacer width="10%" />
-			<s:ToggleButton cornerRadius="0" fontSize="32" label="อายุ 14 วัน"/>
-			<s:ToggleButton cornerRadius="0" fontSize="32" label="อายุ 7 วัน"/>
-			<s:ToggleButton cornerRadius="0" fontSize="32" label="กำหนดอายุเอง"/>
+			<s:Label  width="20%" fontSize="32" text="เลือกอายุสินค้า" height="40" />
+			<s:Spacer width="5%" />
+			<s:ToggleButton cornerRadius="0" fontSize="32" label="14 วัน" height="40" click="selectRemainingDate(event,14)"/>
+			<s:ToggleButton cornerRadius="0" fontSize="32" label="7 วัน" height="40" click="selectRemainingDate(event,7)"/>
+			<s:ToggleButton id="tgBtnExpBBCustom" cornerRadius="0" fontSize="32" label="กำหนดเอง" height="40"
+							click="selectRemainingDate(event,nsExpBBDate.value)"/>
+			<s:NumericStepper id="nsExpBBDate" width="15%"
+							  change="nsExpBBDate_changeHandler(event,tgBtnExpBBCustom)"
+							  enabled="false" focusIn="nsExpBBDate.textDisplay.selectAll();"
+							  fontSize="32" maximum="30000" minimum="1" stepSize="1"
+							  textAlign="right"/>
+			<s:Label fontSize="32" text="วัน" height="40" paddingLeft="5"/>
 		</s:HGroup>
-		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left">
+		<s:Spacer height="20" />
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
 			<s:Spacer width="10%" />
-			<s:Label fontSize="32" width="30%" text="ควรบริโภคก่อน"/>
+			<s:Label fontSize="32" width="20%" text="ควรบริโภคก่อน"/>
+			<s:Spacer width="5%" />
+			<general:DateFieldTH id="dfExpBB" fontSize="40" width="30%" enabled="false"/>
+		</s:HGroup>
+		<s:Spacer height="40" />
+		<s:HGroup id="printStickerPanel" width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
 			<s:Spacer width="10%" />
-			<mx:DateField fontSize="48" width="30%" enabled="false"/>
+			<s:Label width="20%" fontSize="32" text="พิมพ์สติ๊กเกอร์" height="40"/>
+			<s:Spacer width="5%" />
+			<s:NumericStepper id="nsStickerQuantities" width="15%" height="40"
+							  change="nsStickerQuantities_changeHandler(event)" enabled="true"
+							  focusIn="nsStickerQuantities.textDisplay.selectAll();" fontSize="32"
+							  maximum="1000000" minimum="0" stepSize="1" textAlign="right"
+							  value="0"
+							  />
+			<s:Label fontSize="32" text="ดวง" height="40" paddingLeft="20" paddingRight="20"/>
+			<s:Button height="40" width="100" label="ล้างค่า" fontSize="32" click="resetStickerNumber(event)"/>
+		</s:HGroup>
+		<s:Spacer height="20" />
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
+			<s:Spacer width="10%"/>
+			<s:Label width="20%" fontSize="32" text="เพิ่มจำนวน" height="40"/>
+			<s:Spacer width="5%"/>
+			<s:Button label="1" height="100" width="100" fontSize="30" click="addStickerNumber(event,1)"/>
+			<s:Button label="10" height="100" width="100" fontSize="30" click="addStickerNumber(event,10)"/>
+			<s:Button label="50" height="100" width="100" fontSize="30" click="addStickerNumber(event,50)"/>
+			<s:Button label="100" height="100" width="100" fontSize="30" click="addStickerNumber(event,100)"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
+			<s:Spacer width="10%"/>
+			<s:Spacer width="20%"/>
+			<s:Spacer width="5%"/>
+			<s:Button label="200" height="100" width="100" fontSize="30" click="addStickerNumber(event,200)"/>
+			<s:Button label="250" height="100" width="100" fontSize="30" click="addStickerNumber(event,250)"/>
+			<s:Button label="500" height="100" width="100" fontSize="30" click="addStickerNumber(event,500)"/>
+			<s:Button label="1000" height="100" width="100" fontSize="30" click="addStickerNumber(event,1000)"/>
+		</s:HGroup>
+		<s:Spacer height="20"/>
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
+			<s:Spacer width="10%"/>
+			<s:Spacer width="20%"/>
+			<s:Spacer width="5%"/>
+			<s:Button height="100" width="100" id="btnOrderPrint" label="สั่งพิมพ์" fontSize="32" click="printSticker_clickHandler(event)"/>
 		</s:HGroup>
 	</s:VGroup>
-	
 </s:WindowedApplication>
