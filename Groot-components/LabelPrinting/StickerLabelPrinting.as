@@ -1,4 +1,4 @@
-package Printing
+package LabelPrinting
 {
 	import SMITPOSAssist.POSAssist;
 	import SystemBase.POSAssistOperation;
@@ -8,13 +8,13 @@ package Printing
 	
 	import spark.skins.spark.StackedFormHeadingSkin;
 
-	public dynamic class StickerLabel implements IPrintable
+	public dynamic class StickerLabelPrinting implements IPrintable
 	{
 		private var _timer:Timer;
 		private var _posAssistObj:POSAssist;
 		private var _posAssistOperation:POSAssistOperation;
 
-		public function StickerLabel()
+		public function StickerLabelPrinting()
 		{
 			// Init PosAssist
 			_posAssistObj = new POSAssist();

@@ -8,8 +8,8 @@
 	<fx:Style source="ExpiredStickerUI.css"/>
 	<fx:Script>
 		<![CDATA[
-			import Printing.IPrintable;
-			import Printing.StickerLabel;
+			import LabelPrinting.IPrintable;
+			import LabelPrinting.StickerLabelPrinting;
 			
 			import general.DateChooserTH;
 			import general.DateFieldTH;
@@ -117,7 +117,7 @@
 				isNaN(current) ? nsStickerQuantities.value = 0 : _stickerQuantities = current;
 			}
 
-			private var printer:IPrintable = new StickerLabel();
+			private var printer:IPrintable = new StickerLabelPrinting();
 			protected function printSticker_clickHandler(event:Event):void{
 
 				if(nsStickerQuantities.value <= 0)

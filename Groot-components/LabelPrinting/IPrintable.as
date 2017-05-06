@@ -1,4 +1,4 @@
-package Printing
+package LabelPrinting
 {
 	public interface IPrintable
 	{
