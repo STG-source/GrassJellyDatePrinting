@@ -101,5 +101,17 @@ package Printing
 				_posAssistObj.disconnect();
 			};
 		}
+		
+		public function stop():void{
+			_timer.stop();
+			
+			var waitForPrint:Timer = new Timer(1000,1);
+			waitForPrint.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
+				_fail();
+				_isBusy = false;
+				_posAssistObj.disconnect();
+			});
+			waitForPrint.start();
+		}
 	}
 }
