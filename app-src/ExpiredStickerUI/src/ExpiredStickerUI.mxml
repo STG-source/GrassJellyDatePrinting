@@ -89,6 +89,15 @@
 			protected function app_creationCompleteHandler(event:FlexEvent):void
 			{
 				initFirstExpiredBB_btn();
+				var numChild:int = dfExpBB.numChildren;
+				var childObj:Object = null;
+				for(var i:int = 0;i<numChild;i++){
+					childObj = dfExpBB.getChildAt(i);
+					if(childObj as mx.controls.Button != null){
+						childObj.visible = false;
+						childObj.enabled = false;
+					}
+				}
 				dfExpBB.selectedDate = dfMFG.selectedDate;
 				updateExpiredBBDate();
 				nsStickerQuantities.value = 150;
