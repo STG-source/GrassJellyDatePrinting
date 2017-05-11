@@ -15,15 +15,22 @@
 			import general.DateFieldTH;
 			
 			import mx.collections.ArrayCollection;
+			import mx.core.UIComponent;
 			import mx.events.CalendarLayoutChangeEvent;
 			import mx.events.FlexEvent;
+			import mx.events.PropertyChangeEvent;
 			import mx.formatters.DateFormatter;
+			import mx.utils.ObjectProxy;
 			
 			import spark.components.Spinner;
+			import spark.components.supportClasses.TextBase;
 			import spark.formatters.DateTimeFormatter;
 
 			private var _remaining:int = 14;
 			private var _stickerQuantities:int = 1;
+
+			[Bindable] private var _printerStatus:String = "";
+
 			protected function app_initHandler(event:FlexEvent):void
 			{
 				;
@@ -46,7 +53,7 @@
 					_remaining = remaining;
 					updateExpiredBBDate();
 				}catch(err:Error){
-					//trace(err.message)
+					trace(err.message)
 				}
 			}
 			protected function nsExpBBDate_changeHandler(event:Event,tgBtn:ToggleButton):void{
@@ -71,9 +78,10 @@
 					childObj = selectedExpBB.getChildAt(i);
 					try{
 						var userControl:ToggleButton = childObj as ToggleButton;
-						userControl.selected = false;
+						if(userControl != null)
+							userControl.selected = false;
 					}catch(err:Error){
-						//trace(err.message);
+						trace(err.message);
 					}
 				}
 			}
@@ -95,11 +103,37 @@
 					childObj = selectedExpBB.getChildAt(i);
 					try{
 						var userControl:ToggleButton = childObj as ToggleButton;
-						userControl.selected = true;
-						break;
+						if(userControl != null){
+							userControl.selected = true;
+							break;
+						}
 					}catch(err:Error){
-						//trace(err.message);
+						trace(err.message);
 					}
+				}
+			}
+
+			private function orderPrintAlertMessage(text:String):void{
+				lbPrintAlert.text = text;
+			}
+
+			private var autoclear_textTimer:Timer = null;
+			private function autoclear_text(userControl:Object):void{
+
+				if(autoclear_textTimer == null){
+					autoclear_textTimer = new Timer(3000,1);
+					autoclear_textTimer.addEventListener(TimerEvent.TIMER_COMPLETE,function():void{
+						userControl.text = " ";
+					});
+					autoclear_textTimer.start();
+				}
+
+				if(!autoclear_textTimer.running){
+					autoclear_textTimer.start();
+				}
+				else if(autoclear_textTimer.running){
+					autoclear_textTimer.reset();
+					autoclear_textTimer.start();
 				}
 			}
 
@@ -150,21 +184,26 @@
 				printer.done = function():void{
 					trace("printSticker_clickHandler : Printer is done printing");
 					enableOrderPrint();
+					orderPrintAlertMessage("พิมพ์เสร็จแล้ว");
 				};
-				printer.fail = function():void{
+				printer.fail = function(reason:String):void{
 					trace("printSticker_clickHandler : Printer is fail printing");
 					enableOrderPrint();
+
+					if(reason == StickerLabelPrinting.REASON_POSASSIST_DISCONNECTED)
+						orderPrintAlertMessage("ไม่ได้เชื่อมต่อ POSAssist");
 				};
 				printer.cancel = function():void{
 					trace("printSticker_clickHandler : Printer is cancel printing");
 					enableOrderPrint();
+					orderPrintAlertMessage("ยกเลิกการพิมพ์");
 				}
 				btnOrderPrint.enabled = false;
 				printer.printLabel();
 			}
-			
+
 			protected function cancelPrint_clickHandler(event:Event):void{
-				printer.stop();
+				printer.reset();
 			}
 		]]>
 	</fx:Script>
@@ -243,7 +282,8 @@
 		<s:Spacer height="20"/>
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="left" gap="0">
 			<s:Spacer width="10%"/>
-			<s:Spacer width="20%"/>
+			<mx:Label id="lbPrintAlert" width="20%" minHeight="40" color="#FF0000" fontSize="32" text="{_printerStatus}" valueCommit="autoclear_text(lbPrintAlert);"
+					 textAlign="center"/>
 			<s:Spacer width="5%"/>
 			<s:Button height="100" width="150" id="btnOrderPrint" label="สั่งพิมพ์" fontSize="32" click="printSticker_clickHandler(event)"/>
 			<s:Button height="100" width="150" id="btnCancelPrint" label="สั่งเลิกพิมพ์" fontSize="32" click="cancelPrint_clickHandler(event)"/>
