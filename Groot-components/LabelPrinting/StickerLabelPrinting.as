@@ -57,12 +57,19 @@ package LabelPrinting
 		{
 			_done = func;
 		}
-		
+
 		private var _fail:Function = function():void{};
 		public function set fail(func:Function):void
 		{
 			_fail = func;
 		}
+
+		private var _cancel:Function = function():void{};
+		public function set cancel(func:Function):void
+		{
+			_cancel = func;
+		}
+
 		public function printLabel():void
 		{
 			if(_quantities <= 0)
@@ -90,7 +97,6 @@ package LabelPrinting
 					_timer.reset();
 					_done();
 					_isBusy = false;
-					_posAssistObj.disconnect();
 				});
 				_timer.start();
 				_isBusy = true;
@@ -98,18 +104,21 @@ package LabelPrinting
 			}catch(err:Error){
 				_fail();
 				_isBusy = false;
-				_posAssistObj.disconnect();
 			};
 		}
 		
 		public function stop():void{
+
+			if(_timer == null)
+				return;
+
 			_timer.stop();
-			
+			_timer.reset();
+
 			var waitForPrint:Timer = new Timer(1000,1);
 			waitForPrint.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
-				_fail();
+				_cancel();
 				_isBusy = false;
-				_posAssistObj.disconnect();
 			});
 			waitForPrint.start();
 		}

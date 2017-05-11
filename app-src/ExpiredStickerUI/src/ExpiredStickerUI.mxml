@@ -46,7 +46,7 @@
 					_remaining = remaining;
 					updateExpiredBBDate();
 				}catch(err:Error){
-					trace(err.message)
+					//trace(err.message)
 				}
 			}
 			protected function nsExpBBDate_changeHandler(event:Event,tgBtn:ToggleButton):void{
@@ -95,11 +95,10 @@
 					childObj = selectedExpBB.getChildAt(i);
 					try{
 						var userControl:ToggleButton = childObj as ToggleButton;
-						//trace("This toggle button name is : "+userControl.name+" \nbutton status is : "+userControl.selected);
 						userControl.selected = true;
 						break;
 					}catch(err:Error){
-						trace(err.message);
+						//trace(err.message);
 					}
 				}
 			}
@@ -127,6 +126,13 @@
 					return;
 				}
 
+				var enableOrderPrint:Function = function():void{
+					var waitForPrint:Timer = new Timer(1000,1);
+					waitForPrint.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
+						btnOrderPrint.enabled = true;
+					});
+					waitForPrint.start();
+				}
 				var dateFormat:DateTimeFormatter = new DateTimeFormatter();
 				dateFormat.dateTimePattern = "dd/MM/yy";
 
@@ -143,16 +149,16 @@
 					"\\";
 				printer.done = function():void{
 					trace("printSticker_clickHandler : Printer is done printing");
-					var waitForPrint:Timer = new Timer(1000,1);
-					waitForPrint.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
-						btnOrderPrint.enabled = true;
-					});
-					waitForPrint.start();
+					enableOrderPrint();
 				};
 				printer.fail = function():void{
 					trace("printSticker_clickHandler : Printer is fail printing");
-					btnOrderPrint.enabled = true;
+					enableOrderPrint();
 				};
+				printer.cancel = function():void{
+					trace("printSticker_clickHandler : Printer is cancel printing");
+					enableOrderPrint();
+				}
 				btnOrderPrint.enabled = false;
 				printer.printLabel();
 			}
