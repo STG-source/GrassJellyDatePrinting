@@ -1,15 +1,17 @@
 package LabelPrinting
 {
 	import SMITPOSAssist.POSAssist;
-
+	
 	import SystemBase.POSAssistOperation;
-
+	
 	import flash.events.*;
 	import flash.utils.*;
-
+	
 	import spark.skins.spark.StackedFormHeadingSkin;
+	
+	import utilities.IProgress;
 
-	public dynamic class StickerLabelPrinting implements IPrintable
+	public dynamic class StickerLabelPrinting implements IPrintable , IProgress
 	{
 		private var _timer:Timer;
 		private var _posAssistObj:POSAssist;
@@ -121,9 +123,11 @@ package LabelPrinting
 					var textTemp:String = _textLabel.replace("\n","\n"+_timer.currentCount)
 					_posAssistOperation.directPrintLabel(textTemp);
 					trace("สินค้าชิ้นที่ : "+_timer.currentCount +"\n"+"Label is "+_textLabel+"\n");
+					report(_quantities - _timer.currentCount);
 				});
 				_timer.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
 					trace("Completed!");
+					report(_quantities - _timer.currentCount);
 					_timer.reset();
 					_done();
 					_isBusy = false;
@@ -133,6 +137,7 @@ package LabelPrinting
 				// TBC
 			}catch(err:Error){
 				_fail();
+				report(_quantities);
 				_timer.reset();
 				_isBusy = false;
 			};
@@ -150,8 +155,28 @@ package LabelPrinting
 			waitForPrint.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
 				_cancel();
 				_isBusy = false;
+				report(_quantities);
 			});
 			waitForPrint.start();
+		}
+
+		private var report:Function = function(value:Object):void{};
+		// this function let custom update progress function outside from this class ^_^
+		/**
+		 * How to use
+		 * 
+		 * send an function with this template
+		 * function updateReportProgress(current:Object):void{
+		 * 		// Example current is counter , count down or percentage value 0 => 100%
+		 * }
+		 * 
+		 * **/
+		public function updateReport(func:Function):void{
+
+			if(func == null)
+				throw new Error();
+
+			report = func;
 		}
 	}
 }

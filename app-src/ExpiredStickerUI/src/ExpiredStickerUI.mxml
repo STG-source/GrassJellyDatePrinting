@@ -25,6 +25,8 @@
 			import spark.components.Spinner;
 			import spark.components.supportClasses.TextBase;
 			import spark.formatters.DateTimeFormatter;
+			
+			import utilities.IProgress;
 
 			private var _remaining:int = 14;
 			private var _stickerQuantities:int = 1;
@@ -206,7 +208,16 @@
 					trace("printSticker_clickHandler : Printer is cancel printing");
 					enableOrderPrint();
 					orderPrintAlertMessage("ยกเลิกการพิมพ์");
-				}
+				};
+
+				(function():void{
+					var progress:IProgress = printer as IProgress;
+					progress.updateReport(function(progress:Object):void{
+						var iProgress:int = progress as int;
+						lbPrintAlert.text = "เหลือสติ๊กเกอร์ "+iProgress+" ดวง";
+					});
+				})();
+
 				btnOrderPrint.enabled = false;
 				printer.printLabel();
 			}
@@ -266,7 +277,7 @@
 							  maximum="1000000" minimum="0" stepSize="1" textAlign="right"
 							  value="0"
 							  />
-			<s:Label fontSize="32" text="ดวง" height="40" paddingLeft="20" paddingRight="20"/>
+			<s:Label fontSize="32" text="ดวง" height="40" paddingLeft="5" paddingRight="25"/>
 			<s:Button height="40" width="100" label="ล้างค่า" fontSize="32" click="resetStickerNumber(event)"/>
 		</s:HGroup>
 		<s:Spacer height="20" />
