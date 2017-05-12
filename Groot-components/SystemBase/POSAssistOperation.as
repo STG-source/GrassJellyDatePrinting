@@ -38,15 +38,15 @@ package SystemBase
 
 		public function directPrintLabel(prnText:String):void
 		{
-				try {
-					_objPOSAssist.reconnect();
-					_objPOSAssist.printLabel(prnText);
-					_objPOSAssist.mainSocket.flush();
-				}
-				catch(e:Error) {
-					traceError(e);
-					return;
-				}
+			try {
+				_objPOSAssist.reconnect();
+				_objPOSAssist.printLabel(prnText);
+				_objPOSAssist.mainSocket.flush();
+			}
+			catch(e:Error) {
+				traceError(e);
+				return;
+			}
 		}
 
 		public function directKitchenPrint(prnText:String):void
