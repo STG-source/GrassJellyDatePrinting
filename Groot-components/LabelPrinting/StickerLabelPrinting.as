@@ -155,7 +155,6 @@ package LabelPrinting
 			waitForPrint.addEventListener(TimerEvent.TIMER_COMPLETE,function(event:TimerEvent):void{
 				_cancel();
 				_isBusy = false;
-				report(_quantities);
 			});
 			waitForPrint.start();
 		}
